@@ -1,0 +1,16 @@
+.DS_Store
+*~
+*svn-base
+.svn/
+BUILD_NEMO/dev_r8814_surge_modelling_Nemo4
+BUILD_NEMO/xios-2.5_r2022
+BUILD_NEMO/XIOS2
+RUN_NEMO/FES_Tides/
+RUN_NEMO/EXP_tideonly/*nc
+RUN_NEMO/EXP_tideonly/Restart_files/*restart*
+RUN_NEMO/EXP_tideonly/*.exe
+RUN_NEMO/EXP_tideonly/ocean.output
+RUN_NEMO/EXP_tideonly/output.namelist.dyn
+RUN_NEMO/EXP_tideonly/solver.stat
+RUN_NEMO/EXP_tideonly/time.step
+RUN_NEMO/EXP_tideonly/layout.dat
