@@ -42,9 +42,7 @@ are copied/linked into the `bdydta` folder in the experiment directory.
 Clone the repository ::
 
   cd $HOME
-  git clone https://github.com/jpolton/BLZ_SURGE.git BLZ_SURGE
-  #git clone https://github.com/NOC-MSM/BLZ_SURGE.git BLZ_SURGE
-  # I put the repo in the wrong place...
+  git clone https://github.com/NOC-MSM/BLZ_SURGE.git BLZ_SURGE
 
 Copy the INPUTS in place. EDIT <INPUTS_SOURCE> appropriately::
 
