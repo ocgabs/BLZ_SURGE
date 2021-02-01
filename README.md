@@ -20,18 +20,20 @@ https://github.com/pderian/NEMOGCM-Docker (see also BUILD_NEMO/readme.txt)
 0) Prerequisites and path definitions
 =====================================
 
-Prerequisits to be placed in $INPUTS (defined below)::
+Prerequisites to be placed in a INPUTS directory (see below)::
 
   * domain_cfg.nc
   * BLZE12_bdytide_rotT_*.nc   (FES boundary tidal forcing)
   * coordinates.bdy.nc (coordinates for FES boundary forcing)
 
-Define some paths (edit the path for $INPUTS accordingly)::
+Structure:
+The git repo contains BUILD_NEMO and RUN_NEMO. The compilation of XIOS and NEMO
+executables and done once and then copied into RUN_NEMO. BUILD_NEMO could then be
+removed or cleaned to save space.
 
-  export CONFIG=BLZ_SURGE
-  export WDIR=$HOME/$CONFIG
-  export INPUTS=$WDIR/INPUTS
-  export EXP=$WDIR/RUN_NEMO/EXP_tideonly
+The INPUTS directory is empty on cloning.  It needs to contain the forcing and
+domain files that are generated externally to this instruction set. These files
+are copied/linked into the `bdydta` folder in the experiment directory.
 
 
 1) Clone this repository
@@ -43,6 +45,10 @@ Clone the repository ::
   git clone https://github.com/jpolton/BLZ_SURGE.git BLZ_SURGE
   #git clone https://github.com/NOC-MSM/BLZ_SURGE.git BLZ_SURGE
   # I put the repo in the wrong place...
+
+Copy the INPUTS in place. EDIT <INPUTS_SOURCE> appropriately::
+
+  rsync -uvt <INPUTS_SOURCE>/* $HOME/BLZ_SURGE/INPUTS/.
 
 
 
@@ -77,14 +83,15 @@ Get the code::
   cd $HOME/BLZ_SURGE/BUILD_NEMO
   svn co http://forge.ipsl.jussieu.fr/nemo/svn/branches/UKMO/dev_r8814_surge_modelling_Nemo4/NEMOGCM dev_r8814_surge_modelling_Nemo4
 
-Make a link between where the inputs files are and where the model expects them ::
+Copy the MY_SRC modifications to the compilation location::
 
-    ln -s $INPUTS $HOME/BLZ_SURGE/RUN_NEMO/EXP_tideonly/bdydta
+  cp MY_SRC/* dev_r8814_surge_modelling_Nemo4/CONFIG/BLZ_SURGE/MY_SRC/.
 
-NB I HAD A PROBLEM WITH A LURKING SYM LINK. YOU MIGHT NEED TO DELETE $HOME/BLZ_SURGE/RUN_NEMO/EXP_tideonly/bdydta  BEFORE THE LINK CAN BE MADE
+Copy the compiler flag file into location::
 
-Now `$EXP/bdydta` should directly contain `BLZE12_bdytide_rotT_*.nc` and
-`coordinates.bdy.nc`
+  cp cpp_BLZ_SURGE.fcm dev_r8814_surge_modelling_Nemo4/CONFIG/BLZ_SURGE/.
+
+
 
 
 4) Copy the architecture files
@@ -93,7 +100,7 @@ Now `$EXP/bdydta` should directly contain `BLZE12_bdytide_rotT_*.nc` and
 Copy NEMO and XIOS arch files to appropriate folder for building::
 
   cp $HOME/BLZ_SURGE/BUILD_NEMO/arch_NEMOGCM/arch* $HOME/BLZ_SURGE/BUILD_NEMO/dev_r8814_surge_modelling_Nemo4/ARCH
-  cp $HOME/BLZ_SURGE/BUILD_NEMO/arch_XIOS/arch* $HOME/BLZ_SURGE/BUILD_NEMO/XIOS2/arch
+  cp $HOME/BLZ_SURGE/BUILD_NEMO/arch_XIOS/arch* $HOME/BLZ_SURGE/BUILD_NEMO/xios-2.5_r2022/arch
 
 
 
@@ -124,24 +131,24 @@ From here on, unless otherwise stated, all the commands are executed within the
 7) Compile XIOS
 ===============
 
-::
+This took about an hour, so make a cup of tea::
 
-  cd /BLZ_SURGE/BUILD_NEMO/XIOS2
+  cd /BLZ_SURGE/BUILD_NEMO/xios-2.5_r2022
   ./make_xios --dev --netcdf_lib netcdf4_seq --arch DEBIAN
 
 Copy the executable to the experiment directory::
 
-  cp /BLZ_SURGE/BUILD_NEMO/XIOS2/bin/xios_server.exe  /BLZ_SURGE/RUN_NEMO/EXP_tideonly/.
+  cp /BLZ_SURGE/BUILD_NEMO/xios-2.5_r2022/bin/xios_server.exe  /BLZ_SURGE/RUN_NEMO/EXP_tideonly/.
 
 
 
 8) Build NEMO executable
 ========================
 
-Make NEMO executable::
+Make NEMO executable (select 'Y' for OPA_SRC, otherwise select 'N')::
 
   cd /BLZ_SURGE/BUILD_NEMO/dev_r8814_surge_modelling_Nemo4/CONFIG
-  ./makenemo -v 3 –m DEBIAN -n BLZ_SURGE
+  ./makenemo -v 3 -m DEBIAN -n BLZ_SURGE
 
 Copy the executable to the experiment directory::
 
@@ -151,7 +158,19 @@ Copy the executable to the experiment directory::
 9) Run NEMO
 ===========
 
+Make a link between where the inputs files are and where the model expects them ::
+
+    cd /BLZ_SURGE/RUN_NEMO/EXP_tideonly
+    ln -s ../../INPUTS bdydta
+    ln -s ../../INPUTS/domain_cfg.nc .
+
+NB I HAD A PROBLEM WITH A LURKING SYM LINK. YOU MIGHT NEED TO DELETE $HOME/BLZ_SURGE/RUN_NEMO/EXP_tideonly/bdydta  BEFORE THE LINK CAN BE MADE. IF NOT, THEN DELETE ME.
+
+Now `EXP_tideonly/bdydta` should directly contain `BLZE12_bdytide_rotT_*.nc` and
+`coordinates.bdy.nc`
 ::
 
   cd /BLZ_SURGE/RUN_NEMO/EXP_tideonly/
   mpirun -n 2 ./nemo.exe : -n 1 ./xios_server.exe
+
+NB the timestep, run length etc is not optimal, but it works!
