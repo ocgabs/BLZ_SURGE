@@ -27,14 +27,20 @@ Prerequisites to be placed in a INPUTS directory (see below)::
   * coordinates.bdy.nc (coordinates for FES boundary forcing)
 
 Structure:
-The git repo contains BUILD_NEMO and RUN_NEMO. The compilation of XIOS and NEMO
-executables and done once and then copied into RUN_NEMO. BUILD_NEMO could then be
-removed or cleaned to save space.
+The git repo contains BUILD_NEMO and RUN_NEMO. BUILD_NEMO contains the dockerfiles to build the two stages of the surge container. The first stage, BASE creates an container that contains all the libraries requried to run NEMO and XIOS e.g. MPICH, NETCDF, NetCDF FORTRAN etc. This acts as a primer for the surge container which takes the BASE container and builds NEMO and XIOS on top of it. 
+
+Once complete NEMO and XIOS are contained within the container and can be run using the docker run command and run_surge shell script that links the NEMO and XIOS executables along with INPUT data and runs the model saving output in a mounted folder that contains the NEMO model config files. An example is contained in RUN_NEMO. 
+
+**Note**: the user does not need to build these containers, they can be pulled from the docker hub repository (see simple method).
+
+The container can also be used interactively if prefered using the -it flag and calling bash as the container command. See Interactive Section.
 
 The INPUTS directory is empty on cloning.  It needs to contain the forcing and
 domain files that are generated externally to this instruction set. These files
-are copied/linked into the `bdydta` folder in the experiment directory.
+are copied/linked into the `bdydta` folder in the experiment directory using the run_surge shell script.
 
+First Steps
+===========
 
 1) Clone this repository
 ========================
@@ -48,121 +54,60 @@ Copy the INPUTS in place. EDIT <INPUTS_SOURCE> appropriately::
 
   rsync -uvt <INPUTS_SOURCE>/* $HOME/BLZ_SURGE/INPUTS/.
 
+2) Simple Method:
+=================
 
+The user can build the container from scratch if required but both the base container and surge container are availble on docker hub. To use, first install docker and then pull the container::
+  
+  docker pull thopri/nemo-surge:8814
 
-2) Get XIOS2.5 @ r2022 code
-===========================
+This will pull the container from the repository and install it locally. This means all the user really needs is the RUN_NEMO directory from the cloned repo. Assuming the Prerequisite input data is in the INPUTS directory the model can be run with the following command::
 
-Note when NEMO (nemo.exe / opa) is compiled it is done with reference to a
-particular version of XIOS. So on NEMO run time the version of XIOS that built
-`xios_server.exe` must be compatible with the version of XIOS that built
-nemo.exe / opa.
+  docker run --rm -v /path/to/repo/RUN_NEMO/EXP_tideonly:/BLZ_SURGE thopri/nemo-surge:8814
 
-Download XIOS2.5 and prep::
+The --rm flag removes container once finished, -v mounts the defined folder to the container. As no command is specified the container will run its default command which will run the shell script which links the executables and runs the model. 
 
-  cd $HOME/BLZ_SURGE/BUILD_NEMO
-  svn co -r2022 http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/xios-2.5/  xios-2.5_r2022
-  cd xios-2.5_r2022
+Interactive Method
+------------------
 
-Link the xios-2.5_r2022 to a generic XIOS directory name (The generic name is
-  used in the NEMO build arch files). Note you have to use relative paths for
-  the link to work within the docker container::
+While the container runs automatically the user can start the container and use the model interactively by running following command::
 
-  cd $HOME/BLZ_SURGE/BUILD_NEMO
-  ln -s xios-2.5_r2022 XIOS2
+  docker run --rm -it -v /path/to/repo/RUN_NEMO/EXP_tideonly:/BLZ_SURGE thopri/nemo-surge:8814 /bin/bash
 
+Note the extra flag -it which makes the container interactive and starts a tty. There is also the command /bin/bash after the container name. This starts the bash shell rather than running the surge shell script the container is expecting.
 
+After running this commmand, it will drop you in the mounted folder within the container. The user can then navigate the container as they wish. XIOS and NEMO are stored under /SRC directory. 
 
-3) Get NEMO codebase
-====================
+3) Advanced Method:
+===================
 
-Get the code::
+If the user wishes to build from scratch then the following process can be used. Navigate to the BUILD_NEMO directory and build the base container::
 
-  cd $HOME/BLZ_SURGE/BUILD_NEMO
-  svn co http://forge.ipsl.jussieu.fr/nemo/svn/branches/UKMO/dev_r8814_surge_modelling_Nemo4/NEMOGCM dev_r8814_surge_modelling_Nemo4
+  cd BUILD_NEMO
+  docker build -t thopri/nemo-base base/
 
-Copy the MY_SRC modifications to the compilation location::
+This tells docker that the base docker file is in the base folder and to tag (-t) the resulting container with the following name. It is important to build with this tag as the NEMO container built on top of base and it is expecting this tag. Once complete, (it takes awhile!) the NEMO container can be built as follows::
 
-  cp MY_SRC/* dev_r8814_surge_modelling_Nemo4/CONFIG/BLZ_SURGE/MY_SRC/.
+  docker build -t thopri/nemo-surge:8814 surge/
 
-Copy the compiler flag file into location::
+Once this completes then you have built your own NEMO surge model......
 
-  cp cpp_BLZ_SURGE.fcm dev_r8814_surge_modelling_Nemo4/CONFIG/BLZ_SURGE/.
-
-
-
-
-4) Copy the architecture files
-==============================
-
-Copy NEMO and XIOS arch files to appropriate folder for building::
-
-  cp $HOME/BLZ_SURGE/BUILD_NEMO/arch_NEMOGCM/arch* $HOME/BLZ_SURGE/BUILD_NEMO/dev_r8814_surge_modelling_Nemo4/ARCH
-  cp $HOME/BLZ_SURGE/BUILD_NEMO/arch_XIOS/arch* $HOME/BLZ_SURGE/BUILD_NEMO/xios-2.5_r2022/arch
-
-
-
-
-5) Build the Debian Docker image
-================================
-
-Launch docker application. Then back in a terminal::
-
-  cd $HOME/BLZ_SURGE/BUILD_NEMO/Docker
-  docker build -t nemo/compiler .
-
-
-6) Start an interactive container
-=================================
-
-Start an interactive container sharing the source files as a Volume.
-This way the host SRC will be available from within the container as /SRC.
-/!\ Note: /host/path/to/SRC must be the _absolute_ path to the host SRC directory
-(at least on Mac OS X)::
-
-  docker run -v $HOME/BLZ_SURGE:/BLZ_SURGE -t -i nemo/compiler /bin/bash
-  # I.e. docker run -v /host/path/to/BLZ_SURGE:/BLZ_SURGE -t -i nemo/compiler /bin/bash
-
-From here on, unless otherwise stated, all the commands are executed within the
- docker container.
-
-7) Compile XIOS
-===============
-
-This took about an hour, so make a cup of tea::
-
-  cd /BLZ_SURGE/BUILD_NEMO/xios-2.5_r2022
-  ./make_xios --dev --netcdf_lib netcdf4_seq --arch DEBIAN
-
-Copy the executable to the experiment directory::
-
-  cp /BLZ_SURGE/BUILD_NEMO/xios-2.5_r2022/bin/xios_server.exe  /BLZ_SURGE/RUN_NEMO/EXP_tideonly/.
-
-
-
-8) Build NEMO executable
-========================
-
-Make NEMO executable (select 'Y' for OPA_SRC, otherwise select 'N')::
-
-  cd /BLZ_SURGE/BUILD_NEMO/dev_r8814_surge_modelling_Nemo4/CONFIG
-  ./makenemo -v 3 -m DEBIAN -n BLZ_SURGE
-
-Copy the executable to the experiment directory::
-
-  cp /BLZ_SURGE/BUILD_NEMO/dev_r8814_surge_modelling_Nemo4/CONFIG/BLZ_SURGE/BLD/bin/nemo.exe  /BLZ_SURGE/RUN_NEMO/EXP_tideonly/.
-
-
-9) Run NEMO
+4) Run NEMO
 ===========
+
+This section details how to run the model interactively and how the run_surge shell script works.
+
+Link the NEMO exe and XIOS exe. ::
+  
+  cd /BLZ_SURGE
+  ln -s /SRC/NEMOGCM/CONFIG/BLZ_SURGE/BLD/bin/nemo.exe .
+  ln -s -f /SRC/XIOS/bin/xios_server.exe .
 
 Make a link between where the inputs files are and where the model expects them ::
 
     cd /BLZ_SURGE/RUN_NEMO/EXP_tideonly
     ln -s ../../INPUTS bdydta
     ln -s ../../INPUTS/domain_cfg.nc .
-
-NB I HAD A PROBLEM WITH A LURKING SYM LINK. YOU MIGHT NEED TO DELETE $HOME/BLZ_SURGE/RUN_NEMO/EXP_tideonly/bdydta  BEFORE THE LINK CAN BE MADE. IF NOT, THEN DELETE ME.
 
 Now `EXP_tideonly/bdydta` should directly contain `BLZE12_bdytide_rotT_*.nc` and
 `coordinates.bdy.nc`
