@@ -14,8 +14,10 @@ CHARACTER( LEN = 10 ), DIMENSION(5), PARAMETER :: m_varName2d = (/'ssh','u2d','v
 GNU (here):
 CHARACTER( LEN = 10 ), DIMENSION(3), PARAMETER :: m_varName2d = (/'ssh','u2d','v2d'/)
 
-The notes for the docker build were built on those made by Pierre DERIAN
-https://github.com/pderian/NEMOGCM-Docker (see also BUILD_NEMO/readme.txt)
+This repository is based upon original work by Pierre Derian: 
+<contact@pierrederian.net> (https://github.com/pderian/NEMOGCM-Docker), Nikyle Nguyen <NLKNguyen@MSN.com> 
+(https://github.com/NLKNguyen/alpine-mpich), Simon Holgate: https://github.com/simonholgate/nemo-mpich <hello@simonholgate.org.uk> and thopri.
+
 
 0) Prerequisites and path definitions
 =====================================
@@ -42,7 +44,7 @@ are copied/linked into the `bdydta` folder in the experiment directory using the
 First Steps
 ===========
 
-1) Clone this repository
+Clone this repository
 ========================
 
 Clone the repository ::
@@ -54,7 +56,7 @@ Copy the INPUTS in place. EDIT <INPUTS_SOURCE> appropriately::
 
   rsync -uvt <INPUTS_SOURCE>/* $HOME/BLZ_SURGE/INPUTS/.
 
-2) Simple Method:
+Simple Method:
 =================
 
 The user can build the container from scratch if required but both the base container and surge container are availble on docker hub. To use, first install docker and then pull the container::
@@ -78,7 +80,7 @@ Note the extra flag -it which makes the container interactive and starts a tty. 
 
 After running this commmand, it will drop you in the mounted folder within the container. The user can then navigate the container as they wish. XIOS and NEMO are stored under /SRC directory. 
 
-3) Advanced Method:
+Advanced Method:
 ===================
 
 If the user wishes to build from scratch then the following process can be used. Navigate to the BUILD_NEMO directory and build the base container::
@@ -92,7 +94,7 @@ This tells docker that the base docker file is in the base folder and to tag (-t
 
 Once this completes then you have built your own NEMO surge model......
 
-4) Run NEMO
+Run NEMO
 ===========
 
 This section details how to run the model interactively and how the run_surge shell script works.
