@@ -75,5 +75,5 @@ RUN ./makenemo -v 3 -n ${CONFIG} -m DEBIAN add_key ${KEY}
 #RUN ./makenemo -v 3 -r ${REF_CONFIG} -n ${CONFIG} -m DEBIAN add_key ${KEY}
 RUN ln -s  ${XDIR}/bin/xios_server.exe ${EXP}/xios_server.exe 
 
-WORKDIR /${CONFIG}
+WORKDIR /${CONFIG}/RUN_NEMO
 CMD ["/bin/sh","./run_surge.sh"]

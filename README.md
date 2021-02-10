@@ -19,7 +19,7 @@ This repository is based upon original work by Pierre Derian:
 (https://github.com/NLKNguyen/alpine-mpich), Simon Holgate: https://github.com/simonholgate/nemo-mpich <hello@simonholgate.org.uk> and thopri.
 
 
-0) Prerequisites and path definitions
+Prerequisites and path definitions
 =====================================
 
 Prerequisites to be placed in a INPUTS directory (see below)::
