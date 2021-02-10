@@ -30,13 +30,13 @@
 #  - unix variables "$..." are accpeted and will be evaluated before calling fcm.
 #  - fcm variables are starting with a % (and not a $)
 #
-%NCDF_HOME           /usr
-%HDF5_HOME           /usr/lib/x86_64-linux-gnu/hdf5/openmpi
-%XIOS_HOME           /BLZ_SURGE/BUILD_NEMO/XIOS2
+%NCDF_HOME           /usr/local
+%HDF5_HOME           /usr/local
+%XIOS_HOME           /SRC/XIOS
 
 %NCDF_INC            -I%NCDF_HOME/include -I%HDF5_HOME/include
 %NCDF_LIB            -L%HDF5_HOME/lib -L%NCDF_HOME/lib -lnetcdff -lnetcdf -lhdf5_hl -lhdf5 -lz
-%XIOS_INC            -I%XIOS_HOME/inc
+%XIOS_INC            -I%XIOS_HOME/inc 
 %XIOS_LIB            -L%XIOS_HOME/lib -lxios
 
 %CPP                 cpp
@@ -45,13 +45,13 @@
 %FFLAGS              %FCFLAGS
 %LD                  %FC
 %FPPFLAGS            -x f77-cpp-input -ffree-form -ffree-line-length-none
-%LDFLAGS             -lstdc++ -lmpi_cxx
-%AR                  ar
+%LDFLAGS             -lstdc++ -lmpicxx
+%AR                  ar 
 %ARFLAGS             -r
 %MK                  make
 
 %USER_INC            %NCDF_INC %XIOS_INC
-%USER_LIB            %NCDF_LIB %XIOS_LIB
+%USER_LIB            %NCDF_LIB %XIOS_LIB 
 
 %CC                  cc
 %CFLAGS              -O0
