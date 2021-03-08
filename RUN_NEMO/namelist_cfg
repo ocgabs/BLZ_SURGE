@@ -8,8 +8,8 @@
   cn_exp      =  "BLZ-SURGE"  !  experience name
   nn_it000    =  1   !  first time step
   nn_itend    = 432000 !  365 days 8 per hour ! 70080   ! plus 30*4 days
-  nn_date0    =  20210305 !  date at nit_0000 (format yyyymmdd) used if ln_rstart=F or (ln_rstart=T and nn_rstctl=0 or 1)
-  nn_time0    =       0   !  initial time of day in hhmm
+  nn_date0    =  20210308 !  date at nit_0000 (format yyyymmdd) used if ln_rstart=F or (ln_rstart=T and nn_rstctl=0 or 1)
+  nn_time0    =  0100   !  initial time of day in hhmm
   nn_leapy    =  1   !  Leap year calendar (1) or not (0)
   ln_rstart   =  .False.  !  start from rest (F) or from a restart file (T)
     nn_euler    =    1            !  = 0 : start with forward time step if ln_rstart=T
@@ -66,8 +66,8 @@
                             ! (F) for no fluxes (ie tide only case)
   !              !  file name                    ! frequency (hours) ! variable  ! time interp. !  clim  ! 'yearly'/ ! weights  ! rotation ! land/sea mask !
   !              !                               !  (if <0  months)  !   name    !   (logical)  !  (T/F) ! 'monthly' ! filename ! pairing  ! filename      !
-     sn_wndi     = 'BLZ-SURGE_u10'              ,       1           ,'u10',   .false.     , .false. , 'week_fri'  ,'BLZ-SURGE_u10_weights-bicubic.nc' , '' , ''
-     sn_wndj     = 'BLZ-SURGE_v10'              ,       1           ,'v10',   .false.     , .false. , 'week_fri'  ,'BLZ-SURGE_v10_weights-bicubic.nc' , '' , ''
+     sn_wndi     = 'BLZ-SURGE_u10'              ,       1           ,'u10',   .false.     , .false. , 'week_mon'  ,'BLZ-SURGE_u10_weights-bicubic.nc' , '' , ''
+     sn_wndj     = 'BLZ-SURGE_v10'              ,       1           ,'v10',   .false.     , .false. , 'week_mon'  ,'BLZ-SURGE_v10_weights-bicubic.nc' , '' , ''
   !   sn_wndi     = 'BLZ-SURGE_u10'              ,       1           ,'u10',   .false.     , .false. , 'monthly'  ,'BLZ-SURGE_u10_weights-bicubic.nc' , '' , ''
   !   sn_wndj     = 'BLZ-SURGE_v10'              ,       1           ,'v10',   .false.     , .false. , 'monthly'  ,'BLZ-SURGE_v10_weights-bicubic.nc' , '' , ''
 
@@ -92,7 +92,7 @@
 !-----------------------------------------------------------------------
 !          !  file name  ! frequency (hours) ! variable  ! time interp. !  clim  ! 'yearly'/ ! weights  ! rotation ! land/sea mask !
 !          !             !  (if <0  months)  !   name    !   (logical)  !  (T/F) ! 'monthly' ! filename ! pairing  ! filename      !
-   sn_apr= 'BLZ-SURGE_msl',        1         ,   'msl' ,    .false.    , .false., 'week_fri'   ,  'BLZ-SURGE_msl_weights-bicubic.nc'      ,   ''     ,  ''
+   sn_apr= 'BLZ-SURGE_msl',        1         ,   'msl' ,    .false.    , .false., 'week_mon'   ,  'BLZ-SURGE_msl_weights-bicubic.nc'      ,   ''     ,  ''
 !  sn_apr= 'BLZ-SURGE_msl',        1         ,   'msl' ,    .false.    , .false., 'monthly'   ,  'BLZ-SURGE_msl_weights-bicubic.nc'      ,   ''     ,  ''
 !   sn_apr= 'pressure_amm7',        1         ,   'air_pressure_at_sea_level' ,    .true.    , .false., 'daily'   ,  ''      ,   ''     ,  ''
    cn_dir      = './fluxes/'!  root directory for the location of the bulk files

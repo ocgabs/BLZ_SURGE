@@ -91,7 +91,7 @@ def hourssince1900(config, arg, dir, model_run, t, i):
     grbs = pygrib.open(filename)
     grb = grbs.select(name=arg["var1_des"])[0]
     Date_1900 = datetime.datetime(1900,1,1,0,0,0,0)
-    DateTime = datetime.datetime(grb.year, grb.month, grb.day, grb.hour, 0,0,0)
+    DateTime = datetime.datetime(grb.validDate.year, grb.validDate.month, grb.validDate.day, grb.validDate.hour, 0,0,0)
     diff = DateTime - Date_1900
     days, seconds = diff.days, diff.seconds
     hours = days *24 + (seconds // 3600)
