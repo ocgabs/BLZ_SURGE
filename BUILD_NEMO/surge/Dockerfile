@@ -6,7 +6,7 @@ FROM debian:buster as surge
 # Based on NEMO-Docker by Pierre Derian, contact@pierrederian.net, www.pierrederian.net
 MAINTAINER thopri  <thopri@noc.ac.uk> 
 ARG NEMO_REF_CONFIG=GYRE_PISCES
-ARG NEMO_CONFIG=BLZ_SURGE
+ARG NEMO_CONFIG=BLZ-SURGE
 ARG KEY=key_nosignedzero
 
 COPY --from=base /usr/local /usr/local
@@ -24,10 +24,12 @@ USER root
 ENV PACKAGES="subversion make gcc g++ ssh nfs-common"
 ENV PACKAGES_NEMO="perl gfortran"
 ENV PACKAGES_XIOS="liburi-perl zlib1g zlib1g-dev libcurl4"
+ENV PACKAGES_CONDA="bzip2 ca-certificates git libglib2.0-0 libsm6 libxext6 libxrender1 mercurial subversion wget"
 
 ### first update then install the main packages
 RUN apt-get update -y && \
-    apt-get install -y --no-install-recommends ${PACKAGES} ${PACKAGES_NEMO} ${PACKAGES_XIOS} 
+    apt-get install -y --no-install-recommends ${PACKAGES} ${PACKAGES_NEMO} ${PACKAGES_XIOS} \
+    ${PACKAGES_CONDA} && apt-get clean
 
 ENV REF_CONFIG ${NEMO_REF_CONFIG}
 ENV CONFIG ${NEMO_CONFIG}
@@ -71,9 +73,36 @@ RUN printf 'y\nn\nn\nn\nn\nn\nn\nn\n' | ./makenemo -v 3 -n ${CONFIG} -m DEBIAN c
 COPY cpp_${CONFIG}.fcm ${CONFIG}/cpp_${CONFIG}.fcm
 #ADD MY_SRC.tar.gz ${CONFIG}/
 
-RUN ./makenemo -v 3 -n ${CONFIG} -m DEBIAN add_key ${KEY}
-#RUN ./makenemo -v 3 -r ${REF_CONFIG} -n ${CONFIG} -m DEBIAN add_key ${KEY}
-RUN ln -s  ${XDIR}/bin/xios_server.exe ${EXP}/xios_server.exe 
+RUN ./makenemo -v 3 -n ${CONFIG} -m DEBIAN add_key ${KEY} && \
+	ln -s  ${XDIR}/bin/xios_server.exe ${EXP}/xios_server.exe 
+
+WORKDIR ${TDIR}
+RUN ./maketools -n WEIGHTS
+    
+ENV PATH /opt/conda/bin:$PATH
+
+CMD [ "/bin/bash" ]
+
+# Leave these args here to better use the Docker build cache
+ARG CONDA_VERSION=py38_4.9.2
+ARG CONDA_MD5=122c8c9beb51e124ab32a0fa6426c656
+
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-${CONDA_VERSION}-Linux-x86_64.sh -O miniconda.sh && \
+    echo "${CONDA_MD5}  miniconda.sh" > miniconda.md5 && \
+    if ! md5sum --status -c miniconda.md5; then exit 1; fi && \
+    mkdir -p /opt && \
+    sh miniconda.sh -b -p /opt/conda && \
+    rm miniconda.sh miniconda.md5 && \
+    ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
+    echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
+    echo "conda activate base" >> ~/.bashrc && \
+    find /opt/conda/ -follow -type f -name '*.a' -delete && \
+    find /opt/conda/ -follow -type f -name '*.js.map' -delete && \
+    /opt/conda/bin/conda clean -afy 
+    
+RUN conda install --yes \
+    arrow \
+    pyyaml
 
 WORKDIR /${CONFIG}/RUN_NEMO
 CMD ["/bin/sh","./run_surge.sh"]

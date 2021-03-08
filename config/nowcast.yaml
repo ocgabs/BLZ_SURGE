@@ -1,0 +1,397 @@
+# System configuration file for GoMSS Nowcast system
+
+# System status checklist file
+checklist file: $(NOWCAST.ENV.NOWCAST_LOGS)/nowcast_checklist.yaml
+
+
+# Python interpreter in environment with all dependencies installed
+python: $(NOWCAST.ENV.NOWCAST_ENV)/bin/python
+
+
+# Workers scheduled to run at specific times
+#scheduled workers:
+  # Worker module
+ # - nowcast.workers.download_weather:
+      # Time period for worker launch repetition
+  #    every: day
+      # Time at which to launch the worker
+      # (quotes are required to ensure that time is interpreted as a string)
+   #   at: '14:00'
+
+#Download Weather worker configuration
+weather:
+  download:
+    # West Longitude limit
+        leftlon: -90
+    # East Longitude limit
+        rightlon: -82
+    # North Latitude limit
+        toplat: 22
+    # Bottom Latitude limit
+        bottomlat: 15
+    # varaible 1
+        var1: var_MSLET
+    # variable 2
+        var2: var_UGRD
+    # variable 3
+        var3: var_VGRD
+    # Level to download data (10 m above ground)
+        lev1: lev_10_m_above_ground
+    # Level to download data (msl)
+        lev2: lev_mean_sea_level
+    # URL template from which to download NOAA NCEP Grid filter files for GFS model
+        url_template: 'https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25_1hr.pl?file={file_name}{hours}&{lev1}=on&{lev2}=on&{var1}=on&{var2}=on&{var3}=on&subregion=&leftlon={leftlon}&rightlon={rightlon}&toplat={toplat}&bottomlat={bottomlat}&dir=%2{run_time}'
+  # Template for GFS model file name
+    # **Must be quoted to project {} characters**
+        file_template: 'gfs.t{model_run}z.prgb2.0p25.f'
+    # Number of hours requested in the forecast Goes upt 120 (I think)
+        forecast_hrs: 120
+    # Destination directory for downloaded GFS model GRIB data files
+        dest_dir: '/home/thopri/BLZ-SURGE/grib/'
+
+#Forcing process worker configuration
+forcing:
+  process:
+    #number of forecast hours should be the same as in weather download
+        forecast_hrs: 120
+    #variable one
+        var1: u10
+    #variable description for netcdf file
+        var1_des: 10 metre U wind component
+    #varaible two
+        var2: v10
+    #variable description for netcdf file
+        var2_des: 10 metre V wind component
+    #variable three
+        var3: msl
+#    #variable description for netcdf file
+#        var3_des: Pressure reduced to MSL
+#    #Template of GRIB file names
+#        file_template: '202011170000_arw_wrfout_d02.grb2'
+    #variable description for netcdf file
+        var3_des: MSLP (Eta model reduction)
+    #Template of GRIB file names
+        file_template: 'gfs.t{model_run}z.pgrb2.0p25.f'
+    #Destination directory of NetCDF files
+        netcdf_dest_dir: '/home/thopri/BLZ-SURGE/netcdf/'
+    #Grib downloaded files location
+        grib_dir: '/home/thopri/BLZ-SURGE/grib/'
+    #Config name NOTE: do NOT use - in the name as it will break parsing of file names
+        netcdf_name: BLZ-SURGE
+
+#Generate Boundary worker configuration
+generate:
+  boundary:
+    #name of template bilinear namelist file
+        template_1: 'namelist_reshape_bilin_atmos_template'
+    #name of template bicubic namelist file
+        template_2: 'namelist_reshape_bicubic_atmos_template'
+    #namelist file name for bilinear
+        file_out_1: 'namelist_reshape_bilin_atmos'
+    #namelist file name for bicubic
+        file_out_2: 'namelist_reshape_bicubic_atmos'
+    #keys to identify populate fields in namelist templates
+        input_key_1: 'input_key_1'
+        input_key_2: 'input_key_2'
+    #destination directories for netcdf, namelist files and output weighted files
+        netcdf_dest_dir: '/BLZ-SURGE/netcdf/'
+        namelist_dir: '/BLZ-SURGE/namelist/'
+        weights_dir: '/BLZ-SURGE/weights/'
+
+#Run Nemo worker configuration
+RUN_NEMO:
+  # NEMO run duration
+        duration: 120  # hours
+  # Directory where files (e.g. namelist.time) and symlinks
+  # (e,g. iodef.xml) necessary to prepare the NEMO runs are stored
+        config_dir: /home/thopri/BLZ-SURGE/RUN_NEMO/
+  #weighting file location
+        weights_dir: /home/thopri/BLZ-SURGE/weights/
+  #netcdf file location
+        netcdf_dir: /home/thopri/BLZ-SURGE/netcdf/
+  #location of boundary data for model
+        boundary_dest: /home/thopri/BLZ-SURGE/RUN_NEMO/fluxes/
+  #location of restart files
+        restart_dir: /home/thopri/BLZ-SURGE/RUN_NEMO/Restart_files/
+  #name of namelist template file
+        namelist_template: 2_namelist_cfg_template
+  #name of populated namelist file for model
+        pop_namelist: namelist_cfg
+  #name of variables for namelist file
+        var1: .*u10
+        var2: .*v10
+        var3: .*msl
+  #Time step of model in seconds.
+        time_step : 1 #in seconds (6 mins)
+  # Name of the NEMO configuration;
+        config_name: BLZ-SURGE
+   # Use restart file or not
+        restart: False
+  # restart interval (same as atmo model frequency)
+        restart_int: 6 #hours
+  # Name of the model domain coordinates file.
+  # It is assumed to be in the EXP00/ directory of the NEMO configuration
+  # directory composed from the "NEMO code" and "config name" keys above.
+        coordinates: coordinates.nc
+## Directory where run results are stored
+        results archive: /home/thopri/BLZ-SURGE/RUN_NEMO/
+  # Which container framework to use
+        container: podman
+        container_name: docker.io/thopri/nemo-surge:8814
+        container_mount: /home/thopri/BLZ-SURGE/
+        container_dir: BLZ-SURGE
+
+#Watch NEMO worker configuration
+watch:
+  NEMO:
+    #location of model results directory
+        results_dir: /home/thopri/BLZ-SURGE/RUN_NEMO/
+    #duration of model run
+        duration: 120 #Hours
+    #time step of model
+        time_step: 450 #In seconds (7.5 mins)
+    #name of NEMO model configuration
+        config_name: BLZ-SURGE
+
+#Make Plots NEMO worker configuration
+make:
+  plots:
+    #location of station list file
+        station_dir: /SRC/config/
+    #location to save processed image plots both spatial and timeseries
+        plots_dir: /SRC/output/plots/
+    #location to save images to make gif animation
+        animation_plots_dir: /SRC/output/plots/animation_plots/
+    #location of output NETCDF directory
+        netcdf_dir: /SRC/output/netcdf/
+    #location of model outputs
+        model_output_dir: /SRC/NEMOGCM/CONFIG/TEST/EXP00/
+    #location to save CSV output
+        csv_dir: /SRC/output/csv/
+    #model time step    
+        time_step: 360 #In seconds (6 mins)
+    #total time of model run (hours)
+        total_time: 120
+    #interval for spatial plots e.g. every 12 hours
+        interval: 10 #timesteps 10 time steps at 6 mins = 1 hour
+    #global threshold to check across whole domain (currently not active)
+        global_thres: 0.2
+    #name of station list file
+        station_list: station_list.txt
+    #name of NEMO model configuration
+        config_name: Mad-Surge
+
+#Seeding Open Parcels worker configuration
+seed:
+  parcels:
+    # URL
+        url_template: 'https://optics.marine.usf.edu/subscription/modis/YUCATAN/{year}/comp/'
+    # Produce plots? For QA and setup purposes.
+        plot: False
+    # projection for transforming data or giving it a projection?
+        crs: '+proj=longlat'
+    # limits of the domain
+        north: 22
+        south: 15
+        east: -82
+        west: -90
+    # sargassum levels? note values are > or <
+        min: 0
+        max: 252
+    # bathy meter location
+        bathy_meter: '/home/thopri/BLZ-SURGE/INPUTS/BLZE12_bathy_meter.nc'
+        coordinates: '/home/thopri/BLZ-SURGE/INPUTS/BLZE12_coordinates.nc'
+    # directory to store downloaded product
+        dest_dir: '/home/thopri/BLZ-SURGE/sargassium/'
+    # name of GeoTiff image (processed from downloaded image)
+        tiff_name: 'SargassoT7.tif'
+    # string to parse correct image, i.e. unique part of filename
+        parse_ID: 'DENSITY.png'
+
+
+#Clean up worker configuration
+clean:
+  up:
+    #location of model run directory
+        run_dir: /SRC/NEMOGCM/CONFIG/TEST/EXP00/
+    #location of log files
+        log_dir: /SRC/logging/
+    #location of output files
+        out_dir: /SRC/output/
+    #location of status file
+        status_dir: /SRC/status/
+    #name of model configuration
+        config_name: Mad-Surge
+    #location of restart files
+        restart_dir: /SRC/NEMOGCM/CONFIG/TEST/EXP00/Restart_files/
+    #Runtime model files to delete after successful run
+        del_1: layout.dat
+        del_2: namelist_cfg
+        del_3: ocean.output
+        del_4: output.namelist.dyn
+        del_5: solver.stat
+        del_6: time.step
+    #number of days to keep log and output files
+        num_days: 1
+    #logging sub directories for both model and worker logs
+        log_1: model_logs/
+        log_2: worker_logs/
+    #location of circus (process manager) log file
+        circus_log: nowcast/circus.log
+    #subdirectories for processed model output
+        out_1: csv/
+        out_2: netcdf/
+        out_3: plots/
+
+
+# Logging system configuration
+logging:
+  version: 1
+  disable_existing_loggers: False
+  formatters:
+    simple:
+      format: '%(asctime)s %(levelname)s [%(name)s] %(message)s'
+  handlers:
+    console:
+      class: logging.StreamHandler
+      # Level 100 disables console logging.
+      # Use worker --debug flag to enable console logging.
+      level: DEBUG # 100
+      formatter: simple
+      stream: ext://sys.stdout
+      #    info_text:
+      #      class: logging.handlers.RotatingFileHandler
+      #level: INFO
+      #formatter: simple
+      #filename: $(NOWCAST.ENV.NOWCAST_LOGS)/nowcast.log
+      #backupCount: 7
+      #debug_text:
+      #class: logging.handlers.RotatingFileHandler
+      #level: DEBUG
+      #formatter: simple
+      #filename: $(NOWCAST.ENV.NOWCAST_LOGS)/nowcast.debug.log
+      #backupCount: 7
+      #checklist:
+      #class: logging.handlers.RotatingFileHandler
+      #level: INFO
+      #formatter: simple
+      #filename: $(NOWCAST.ENV.NOWCAST_LOGS)/checklist.log
+      #backupCount: 7
+      #sentry:
+      #class: raven.handlers.logging.SentryHandler
+      #level: ERROR
+      # dsn will be obtained from SENTRY_DSN environment variable
+  root:
+    level: DEBUG
+    handlers:
+     - console
+       #- info_text
+       #- debug_text
+       #- sentry
+
+# Message system
+zmq:
+  host: localhost
+  ports:
+    # traffic between manager and message broker
+    manager: 4343
+    # traffic between workers and message broker
+    workers: 4344
+
+message registry:
+  # Message types that the manager process can send and their meanings
+  # Don't change this section without making corresponding changes in
+  # the nemo_nowcast.manager module of the NEMO_Nowcast package.
+  manager:
+    ack: message acknowledged
+    checklist cleared: system checklist cleared
+    unregistered worker: ERROR - message received from unregistered worker
+    unregistered message type: ERROR - unregistered message type received from worker
+    no after_worker function: ERROR - after_worker function not found in next_workers module
+
+  # Module from which to load :py:func:`after_<worker_name>` functions
+  # that provide lists of workers to launch when :kbd:`worker_name` finishes
+  next workers module: nowcast.next_workers
+
+  workers:
+    # Worker module name
+    sleep:
+      # The key in the system checklist that the manager maintains that is to
+      # be used to hold message payload information provided by the
+      # :kbd:`example` worker
+      checklist key: sleepyhead
+      #Message types that the :kbd:`example` worker can send and their meanings
+      success: sleep worker slept well
+      failure: sleep worker slept badly
+      crash: sleep worker crashed            
+          
+    download_weather:
+      # The key in the system checklist that the manager maintains that is to
+      # be used to hold message payload information provided by the worker
+      checklist key: weather forecast
+      # Message types that the worker can send and their meanings
+      success: weather forecast ready
+      failure: weather forecast download failed
+      crash: download_weather worker crashed
+
+    process_forcing:
+      # The key in the system checklist that the manager maintains that is to
+      # be used to hold message payload information provided by the worker      #
+      checklist key: process wind
+      # Message types that the worker can send and their meanings
+      success: wind files successfully processed
+      failure: wind file processing unsuccessful
+      crash: process_wind worker crashed
+
+    generate_boundary:
+      checklist key: generate boundary conditions
+      success: boundary conditions generated successfully
+      failure: boundary conditions generation unsuccessful
+      crash: generate_boundary worker crashed
+
+    run_nemo:
+      checklist key: NEMO run
+      success: NEMO run started
+      failure: NEMO run not started
+      crash: run_nemo worker crashed
+
+    make_plots:
+      checklist key: Made plots
+      success: plots drawn
+      failure: plots failed
+      crash: make_plots worker crashed
+
+    watch_nemo:
+      checklist key: NEMO run
+      need: NEMO run information dict requested
+      success: NEMO run completed
+      failure: NEMO run failed
+      crash: watch_NEMO worker crashed
+
+    clean_up:
+      checklist key: Workspace cleared
+      success: Workspace cleared successfully
+      failure: Workspace not cleared
+      crash: clean up worker crashed
+
+    clear_checklist:
+      # No :kbd:`checklist key` required because clear_checklist worker
+      # returns nothing to update the checklist with, having just requested
+      # that it be cleared!
+      clear checklist: request that manager clear system state checklist
+      success: system state checklist cleared
+      failure: system state checklist clearance failed
+      crash: clear_checklist worker crashed
+
+    stop_container:
+      checklist key: Worker crashed or failed
+      success: completed text file written, container stopping
+      failure: worker failed, unable to stop container
+      crash: worker crashed, unable to stop container
+
+          #   rotate_logs:
+          #    checklist key: log rotation
+          #    success: logs rotated
+          #    failure: log rotation failed
+          #     crash: rotate_logs worker crashed
+

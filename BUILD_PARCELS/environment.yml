@@ -1,0 +1,13 @@
+name: py3_parcels_mpi
+channels:
+ - conda-forge
+dependencies:
+ - python=3.6
+ - parcels
+ - mpi4py
+ - mpich
+ - scikit-learn
+ - jupyter
+ - cartopy
+ - ffmpeg
+ - pytest

@@ -14,3 +14,7 @@ RUN_NEMO/EXP_tideonly/output.namelist.dyn
 RUN_NEMO/EXP_tideonly/solver.stat
 RUN_NEMO/EXP_tideonly/time.step
 RUN_NEMO/EXP_tideonly/layout.dat
+*.nc
+*.exe
+grib/
+*.npy
