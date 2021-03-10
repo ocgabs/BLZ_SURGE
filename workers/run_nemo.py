@@ -66,7 +66,7 @@ def main(config_loc=''):
             json.dump(params, fp)
         nn_it000 = 1
         date0 = params['year']+params['month']+params['day']
-        nn_itend = sim_length(config) - (3600/config['time_step'])
+        nn_itend = int(sim_length(config) - (3600/config['time_step']))
         restart_length = length_restart(config, nn_it000)
         restart_write = write_restart(config)
     pop_namelist(config, params, leap, weight_vars, nn_itend, day_str, restart_length, nn_it000, restart_write, date0) #populate namelist file with
