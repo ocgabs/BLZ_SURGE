@@ -66,7 +66,7 @@ def main(config_loc=''):
             json.dump(params, fp)
         nn_it000 = 1
         date0 = params['year']+params['month']+params['day']
-        nn_itend = sim_length(config)
+        nn_itend = sim_length(config) - (3600/config['time_step'])
         restart_length = length_restart(config, nn_it000)
         restart_write = write_restart(config)
     pop_namelist(config, params, leap, weight_vars, nn_itend, day_str, restart_length, nn_it000, restart_write, date0) #populate namelist file with
@@ -157,6 +157,7 @@ def calc_nn_itend(config, timesteps):
     dt_hr = config['time_step']/(60*60)
     nn_itend_init = int(config['duration']/dt_hr)
     nn_itend = nn_itend_init + timesteps
+    nn_itend = nn_itend - (3600/config['time_step'])
     if nn_itend >= 99999999:
         print('Out of Steps Error: run model with restart disabled (False) to reset timesteps')
         nn_itend = 'NaN'

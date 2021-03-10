@@ -18,3 +18,9 @@ RUN_NEMO/EXP_tideonly/layout.dat
 *.exe
 grib/
 *.npy
+ocean.output
+solver.stat
+time.step
+layout.dat
+output.namelist.dyn
+
