@@ -290,11 +290,13 @@ def delete_old_fluxes(config):
     return status    
 #start the model, and direct terminal output into log file that is indivdually dated
 def start_nemo(config):
-    start_ymd = arrow.now().format('YYYY-MM-DD-HH')
+    start_ymd = arrow.now().format('YYYY-MM-DD-HH-MM-SS')
     if config['container'] == 'podman':
-        os.system('podman run --rm -v '+config['container_mount']+':/'+config['container_dir']+':z '+config['container_name'])
+        os.system('podman run --rm -v '+config['container_mount']+':/'+config['container_dir']+':z '
+                  +config['container_name']+' &> '+config['container_log']+'containerlog-'+start_ymd+'.txt &')
     if config['container'] == 'docker':
-        os.system('docker run --rm -v '+config['container_mount']+':/'+config['container_dir']+' '+config['container_name'])
+        os.system('docker run --rm -v '+config['container_mount']+':/'+config['container_dir']+' '
+                  +config['container_name']+' &> '+config['container_log']+'containerlog-'+start_ymd+'.txt &')
 
 if __name__ == '__main__':
     main()  # pragma: no cover

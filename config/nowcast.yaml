@@ -141,6 +141,8 @@ RUN_NEMO:
         container_dir: BLZ-SURGE
   # Time to start model, starting at midnight fails due to no previous day data
         hour_start: '01' # 1 am
+  # where to save container terminal output in log file
+        container_log: /home/thopri/BLZ-SURGE/logs/
 
 #Watch NEMO worker configuration
 WATCH_NEMO:

@@ -26,3 +26,5 @@ output.namelist.dyn
 *.pyc
 *.png
 *.csv
+*.txt
+*.dyn
