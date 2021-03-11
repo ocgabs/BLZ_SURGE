@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import os
 from random import randint
 
-nc_f = 'Belize_nemo_particles_3000p30d.nc'  # Your filename
+nc_f = 'nBelize_nemo_sargaso_particlesT2.nc'  # Your filename
 nc_fid = Dataset(nc_f, 'r')  # Dataset is the class behavior to open the file
                                 # and create an instance of the ncCDF4 class
 #nc_attrs, nc_dims, nc_vars = ncdump(nc_fid) #ncdump functions needs to be coded

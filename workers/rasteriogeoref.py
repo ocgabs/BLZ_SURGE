@@ -162,8 +162,11 @@ def main():
     slo[sloc_range]
     sla[sloc_range]
 
-    np.save(config['seed']['parcels']['dest_dir']+'slo',slo)
-    np.save(config['seed']['parcels']['dest_dir'] + 'sla', sla)
+    ilon = slo[sloc_range]
+    ilat = sla[sloc_range]
+
+    np.savetxt(config['seed']['parcels']['dest_dir']+'ilon.csv',ilon,delimiter=',')
+    np.savetxt(config['seed']['parcels']['dest_dir'] + 'ilat.csv', ilat,delimiter=',')
 
     print('The End')
     return 0

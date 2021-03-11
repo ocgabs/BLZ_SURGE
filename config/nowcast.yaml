@@ -1,22 +1,21 @@
-# System configuration file for GoMSS Nowcast system
+# System configuration file for Nowcast system
 
-# System status checklist file
-checklist file: $(NOWCAST.ENV.NOWCAST_LOGS)/nowcast_checklist.yaml
+MANAGER:
+    # How often to run NEMO model
+        NEMO_running: 24 # hours
+    # How often to run Sargassium product
+        SARGASSIUM_running: 168 # hours
+    # POLL interval
+        POLL_INTERVAL: 60 # minutes
 
-
-# Python interpreter in environment with all dependencies installed
-python: $(NOWCAST.ENV.NOWCAST_ENV)/bin/python
-
-
-# Workers scheduled to run at specific times
-#scheduled workers:
-  # Worker module
- # - nowcast.workers.download_weather:
-      # Time period for worker launch repetition
-  #    every: day
-      # Time at which to launch the worker
-      # (quotes are required to ensure that time is interpreted as a string)
-   #   at: '14:00'
+SUPERVISOR:
+        AUTO_RESTART: false
+        STARTUP_SECS: 0
+        STDOUT_LOG: /home/thopri/BLZ-SURGE/logs/manager_log.txt
+        REDIRCT_STDERR: true
+        STDERR_LOG: '' #Not needed if REDIRECT_STDERR is set to true
+        LOGFILE_MAX: 1000000 #The size (bytes) a log file is allowed to grow to until it is auto rotated.
+        LOGFILES: 5 # number of rotated logs to keep
 
 #Download Weather worker configuration
 weather:
@@ -126,9 +125,9 @@ RUN_NEMO:
   # Name of the NEMO configuration;
         config_name: BLZ-SURGE
    # Use restart file or not
-        restart: False
+        restart: true
   # restart interval (same as atmo model frequency)
-        restart_int: 6 #hours
+        restart_int: 24 #hours
   # Name of the model domain coordinates file.
   # It is assumed to be in the EXP00/ directory of the NEMO configuration
   # directory composed from the "NEMO code" and "config name" keys above.
@@ -140,18 +139,21 @@ RUN_NEMO:
         container_name: docker.io/thopri/nemo-surge:8814
         container_mount: /home/thopri/BLZ-SURGE/
         container_dir: BLZ-SURGE
+  # Time to start model, starting at midnight fails due to no previous day data
+        hour_start: '01' # 1 am
 
 #Watch NEMO worker configuration
-watch:
-  NEMO:
+WATCH_NEMO:
     #location of model results directory
         results_dir: /home/thopri/BLZ-SURGE/RUN_NEMO/
     #duration of model run
         duration: 120 #Hours
     #time step of model
-        time_step: 450 #In seconds (7.5 mins)
+        time_step: 1 #In seconds (7.5 mins)
     #name of NEMO model configuration
         config_name: BLZ-SURGE
+    # name of container to watch
+        container_name: docker.io/thopri/nemo-surge:8814
 
 #Make Plots NEMO worker configuration
 make:
@@ -169,7 +171,7 @@ make:
     #location to save CSV output
         csv_dir: /SRC/output/csv/
     #model time step    
-        time_step: 360 #In seconds (6 mins)
+        time_step: 1 #In seconds (6 mins)
     #total time of model run (hours)
         total_time: 120
     #interval for spatial plots e.g. every 12 hours
@@ -179,7 +181,7 @@ make:
     #name of station list file
         station_list: station_list.txt
     #name of NEMO model configuration
-        config_name: Mad-Surge
+        config_name: BLZ-SURGE
 
 #Seeding Open Parcels worker configuration
 seed:
@@ -207,6 +209,10 @@ seed:
         tiff_name: 'SargassoT7.tif'
     # string to parse correct image, i.e. unique part of filename
         parse_ID: 'DENSITY.png'
+
+STOP_CONTAINER:
+    # name of container to stop
+        container_name: docker.io/thopri/nemo-surge:8814
 
 
 #Clean up worker configuration
@@ -242,156 +248,3 @@ clean:
         out_1: csv/
         out_2: netcdf/
         out_3: plots/
-
-
-# Logging system configuration
-logging:
-  version: 1
-  disable_existing_loggers: False
-  formatters:
-    simple:
-      format: '%(asctime)s %(levelname)s [%(name)s] %(message)s'
-  handlers:
-    console:
-      class: logging.StreamHandler
-      # Level 100 disables console logging.
-      # Use worker --debug flag to enable console logging.
-      level: DEBUG # 100
-      formatter: simple
-      stream: ext://sys.stdout
-      #    info_text:
-      #      class: logging.handlers.RotatingFileHandler
-      #level: INFO
-      #formatter: simple
-      #filename: $(NOWCAST.ENV.NOWCAST_LOGS)/nowcast.log
-      #backupCount: 7
-      #debug_text:
-      #class: logging.handlers.RotatingFileHandler
-      #level: DEBUG
-      #formatter: simple
-      #filename: $(NOWCAST.ENV.NOWCAST_LOGS)/nowcast.debug.log
-      #backupCount: 7
-      #checklist:
-      #class: logging.handlers.RotatingFileHandler
-      #level: INFO
-      #formatter: simple
-      #filename: $(NOWCAST.ENV.NOWCAST_LOGS)/checklist.log
-      #backupCount: 7
-      #sentry:
-      #class: raven.handlers.logging.SentryHandler
-      #level: ERROR
-      # dsn will be obtained from SENTRY_DSN environment variable
-  root:
-    level: DEBUG
-    handlers:
-     - console
-       #- info_text
-       #- debug_text
-       #- sentry
-
-# Message system
-zmq:
-  host: localhost
-  ports:
-    # traffic between manager and message broker
-    manager: 4343
-    # traffic between workers and message broker
-    workers: 4344
-
-message registry:
-  # Message types that the manager process can send and their meanings
-  # Don't change this section without making corresponding changes in
-  # the nemo_nowcast.manager module of the NEMO_Nowcast package.
-  manager:
-    ack: message acknowledged
-    checklist cleared: system checklist cleared
-    unregistered worker: ERROR - message received from unregistered worker
-    unregistered message type: ERROR - unregistered message type received from worker
-    no after_worker function: ERROR - after_worker function not found in next_workers module
-
-  # Module from which to load :py:func:`after_<worker_name>` functions
-  # that provide lists of workers to launch when :kbd:`worker_name` finishes
-  next workers module: nowcast.next_workers
-
-  workers:
-    # Worker module name
-    sleep:
-      # The key in the system checklist that the manager maintains that is to
-      # be used to hold message payload information provided by the
-      # :kbd:`example` worker
-      checklist key: sleepyhead
-      #Message types that the :kbd:`example` worker can send and their meanings
-      success: sleep worker slept well
-      failure: sleep worker slept badly
-      crash: sleep worker crashed            
-          
-    download_weather:
-      # The key in the system checklist that the manager maintains that is to
-      # be used to hold message payload information provided by the worker
-      checklist key: weather forecast
-      # Message types that the worker can send and their meanings
-      success: weather forecast ready
-      failure: weather forecast download failed
-      crash: download_weather worker crashed
-
-    process_forcing:
-      # The key in the system checklist that the manager maintains that is to
-      # be used to hold message payload information provided by the worker      #
-      checklist key: process wind
-      # Message types that the worker can send and their meanings
-      success: wind files successfully processed
-      failure: wind file processing unsuccessful
-      crash: process_wind worker crashed
-
-    generate_boundary:
-      checklist key: generate boundary conditions
-      success: boundary conditions generated successfully
-      failure: boundary conditions generation unsuccessful
-      crash: generate_boundary worker crashed
-
-    run_nemo:
-      checklist key: NEMO run
-      success: NEMO run started
-      failure: NEMO run not started
-      crash: run_nemo worker crashed
-
-    make_plots:
-      checklist key: Made plots
-      success: plots drawn
-      failure: plots failed
-      crash: make_plots worker crashed
-
-    watch_nemo:
-      checklist key: NEMO run
-      need: NEMO run information dict requested
-      success: NEMO run completed
-      failure: NEMO run failed
-      crash: watch_NEMO worker crashed
-
-    clean_up:
-      checklist key: Workspace cleared
-      success: Workspace cleared successfully
-      failure: Workspace not cleared
-      crash: clean up worker crashed
-
-    clear_checklist:
-      # No :kbd:`checklist key` required because clear_checklist worker
-      # returns nothing to update the checklist with, having just requested
-      # that it be cleared!
-      clear checklist: request that manager clear system state checklist
-      success: system state checklist cleared
-      failure: system state checklist clearance failed
-      crash: clear_checklist worker crashed
-
-    stop_container:
-      checklist key: Worker crashed or failed
-      success: completed text file written, container stopping
-      failure: worker failed, unable to stop container
-      crash: worker crashed, unable to stop container
-
-          #   rotate_logs:
-          #    checklist key: log rotation
-          #    success: logs rotated
-          #    failure: log rotation failed
-          #     crash: rotate_logs worker crashed
-

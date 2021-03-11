@@ -45,11 +45,14 @@ import yaml
 from argparse import ArgumentParser
 
 #Process Forcing function to convert the hourly GRIB files into combined NETCDF file for each variable
-def main():
-    parser = ArgumentParser(description='Process GRIB files')
-    parser.add_argument('config_location', help='location of YAML config file')
-    args = parser.parse_args()
-    config = read_yaml(args.config_location)
+def main(config_loc=''):
+    if config_loc == '':
+        parser = ArgumentParser(description='RUN NEMO worker')
+        parser.add_argument('config_location', help='location of YAML config file')
+        args = parser.parse_args()
+        config = read_yaml(args.config_location)
+    else:
+        config = read_yaml(config_loc)
     ymd = arrow.now().format('YYYY-MM-DD') #Get current data in given format
     dir = dir_gen(config) #get directory values from YAML file
     model_run = ModelRun(dir) #Calculate the model run hour by finding the latest GRIB download

@@ -43,7 +43,7 @@ def main(config_loc=''):
         GRIB = HTTP_HEAD(config, arg, model_run, t, i) #Do a http head request to check date file exists
         if GRIB != 200: #If returned code is anyhting other than 200 (200 shows file is present)
             E = 1 #Change error code to 1
-            break
+            return E
         print(str(i+1)+' of '+str(int(arg["forecast_hrs"]))+' forecast files present')
     #If E = 0 then all files are present and then a http request for the data can be made
     if E == 0:
@@ -51,7 +51,9 @@ def main(config_loc=''):
         for i in range(int(arg["forecast_hrs"])):
             DL = HTTP_req(config, arg, model_run, t, i) #Request and download all data
             print(str(i + 1) + ' of ' + str(int(arg["forecast_hrs"])) + ' forecast files downloaded')
-
+            if type(DL) == int:
+                E = 3 #Set error code to 3
+                return E
         #Create checklist to be written to checklist YAML file
         checklist = {f'{ymd} forecast': "Current Model Run Downloaded"}
     #If E is 1 then the IF statement catching HTTP error codes has activated    
@@ -63,17 +65,21 @@ def main(config_loc=''):
             GRIB = HTTP_HEAD(config, arg, model_run, t, i) #Http Head request for previous model run
             if GRIB != 200: #If the return code is not 200 (showing file is present) then
                 E = 3 #Set error code to 3
-                break
+                return E
+            print(str(i + 1) + ' of ' + str(int(arg["forecast_hrs"])) + ' forecast files present')
     #If E is still 1 then previous model data is present    
     if E == 1:
         for i in range(int(arg["forecast_hrs"])):
-            DL = HTTP_req(config, arg, model_run, t, i)  #Request and download data                               
-
+            DL = HTTP_req(config, arg, model_run, t, i)  #Request and download data
+            print(str(i + 1) + ' of ' + str(int(arg["forecast_hrs"])) + ' forecast files downloaded')
+            if type(DL) == int:
+                E = 3 #Set error code to 3
+                return E
     if E == 3: #If E = 3 then both the current and previous model runs are not present (or URL template is incorrect)
         print('Error code 3')
-        return
+        return E
 
-    return 0 #Checklist is returned to be written to the checklist YAML file.
+    return 0
 
 '''Read in config file with all parameters required'''
 def read_yaml(YAML_loc):
@@ -92,7 +98,12 @@ def HTTP_HEAD(config, arg, model_run, t, i):
     URL = url_template.format(**arg)
     URL = URL.format(hours = hours)
     #print(URL)
-    r = requests.head(URL)
+    try:
+        r = requests.head(URL)
+    except requests.exceptions.ConnectionError:
+        print('connection error retrying after 10 seconds')
+        time.sleep(10)
+        r = requests.head(URL)
     time.sleep(1)
     return r.status_code
 #Function to make HTTP requests to download the relevent section of the GFS model
@@ -101,8 +112,15 @@ def HTTP_req(config, arg, model_run, t, i,redirect=False):
     hours = str(t[i])
     URL = url_template.format(**arg)
     URL = URL.format(hours = hours)
-    #print(URL)
-    response = requests.get(URL)
+    #print(URL
+    try:
+        response = requests.get(URL)
+    except requests.exceptions.ConnectionError:
+        print('connection error retrying after 10 seconds')
+        time.sleep(10)
+        response = requests.head(URL)
+    if response.status_code != 200:
+        return response.status_code
     #print(response.status_code)
     file_name = arg["dest_dir"]+arg["file_name"]+str(t[i])
     with open(file_name, 'wb') as f:

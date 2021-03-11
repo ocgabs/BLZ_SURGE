@@ -189,31 +189,26 @@ AAAAAAAA
     Namelist namrun
        job number                      nn_no      =            0
        experiment name for output      cn_exp     = BLZ-SURGE                                                                                                                                                                                                                                                       
-       file prefix restart input       cn_ocerst_in= BLZ-SURGE_00000001_restart                                                                                                                                                                                                                                      
+       file prefix restart input       cn_ocerst_in= BLZ-SURGE_00259200_restart                                                                                                                                                                                                                                      
        restart input directory         cn_ocerst_indir= ./Restart_files                                                                                                                                                                                                                                                 
        file prefix restart output      cn_ocerst_out= restart                                                                                                                                                                                                                                                         
        restart output directory        cn_ocerst_outdir= ./Restart_files                                                                                                                                                                                                                                                 
-       restart logical                 ln_rstart  =  F
+       restart logical                 ln_rstart  =  T
        start with forward time step    nn_euler   =            1
        control of time step            nn_rstctl  =            2
-       number of the first time step   nn_it000   =            1
-       number of the last time step    nn_itend   =       432000
+       number of the first time step   nn_it000   =       259201
+       number of the last time step    nn_itend   =       687600
        initial calendar date aammjj    nn_date0   =     20210308
        initial time of day in hhmm     nn_time0   =          100
        leap year calendar (0/1)        nn_leapy   =            1
        initial state output            nn_istate  =            0
-       frequency of restart file       nn_stock   =        70080
-       frequency of output file        nn_write   =        70080
+       frequency of restart file       nn_stock   =        86400
+       frequency of output file        nn_write   =         3600
        mask land points                ln_mskland =  F
        additional CF standard metadata ln_cfmeta  =  F
        overwrite an existing file      ln_clobber =  T
        NetCDF chunksize (bytes)        nn_chunksz =            0
        IS coupling at the restart step ln_iscpl   =  F
-
- ===>>> : W A R N I N G
-         ===============
-
-  ln_rstart =.FALSE., nn_euler is forced to 0                                                                                                                                                                                                                    
     The IOIPSL calendar is "gregorian", i.e. leap year
 
     Namelist namdom : space & time domain
@@ -348,12 +343,17 @@ AAAAAAAA
 
                zstar vertical coordinate is used
 
- dom_ctl : extrema of the masked scale factors
- ~~~~~~~
-              e1t maxi:    1002.45 at i =   169 j=    60
-              e1t mini:     996.98 at i =    51 j=   644
-              e2t maxi:    1051.03 at i =   124 j=    20
-              e2t mini:    1018.01 at i =    51 j=   644
+ rst_read : read oce NetCDF restart file
+ ~~~~~~~~
+
+ ===>>> : E R R O R
+         ===========
+
+                     iom_open ~~~
+ File ./Restart_files/BLZ-SURGE_00259200_restart.nc* not found
+ dom_vvl_rst WARNING : e3t_n not found in restart file
+ Compute scale factor from sshn
+ neuler is forced to 0
 
  dom_init : end of domain initialization nn_msh=           0
 
@@ -375,13 +375,21 @@ AAAAAAAA
 
     T & S data not used
     2D ocean - ocean will be started at rest and T&S = 0
+
+ rst_read : read oce NetCDF restart file
+ ~~~~~~~~
+
+ ===>>> : E R R O R
+         ===========
+
+                     iom_open ~~~
+ File ./Restart_files/BLZ-SURGE_00259200_restart.nc* not found
   *** Info used values : 
     date ndastp                                      :     20210308
-    number of elapsed days since the begining of run :    0.0000000000000000     
+    number of elapsed days since the begining of run :    3.0000000000000000     
     nn_time0                                         :          100
 
  =======>> 1/2 time step before the start of the run DATE Y/M/D =   2021/ 3/ 8  nsec_day:    3599  nsec_week:    3599                     nsec_month:  608399  nsec_year: 5705999
- istate_init : 2D case, setting tracers to 0 and ocean at rest
 
  tide_init : Initialization of the tidal components
  ~~~~~~~~~ 
@@ -829,391 +837,10 @@ AAAAAAAA
 AAAAAAAA
 
 
- sbc_tide : Update of the components and (re)Init. the potential at kt=           1
- ~~~~~~~~ 
- M2    -12.602552677032874       0.99076556723281184        8.6710392999231303        1.4051890257567467E-004
- S2     0.0000000000000000        1.0000000000000000        6.2833307512839189        1.4544410433286079E-004
- K2   -0.29388029568300977        1.0895666292465052        18.358423742933333        1.4584231709359271E-004
-  usr_sbc : AMM7_SURGE tide + surge case: surface wind and pressure (assuming ln_dyn_apr=T) applied
-  ~~~~~~~~~~~ 
-
- sbc_surge : flux formulation for ocean surface boundary condition
- ~~~~~~~~~
-    fld_fill : fill data structure with information from namelist namsbc_surge
-    ~~~~~~~~
-       list of files and frequency (>0: in hours ; <0 in months)
-       root filename: ./fluxes/BLZ-SURGE_u10   variable name: u10
-          frequency:    1.0000000000000000         time interp:  F    climatology:  F
-          weights: ./fluxes/BLZ-SURGE_u10_weights-bicubic.nc   pairing:    data type: week_mon   land/sea mask:
-       root filename: ./fluxes/BLZ-SURGE_v10   variable name: v10
-          frequency:    1.0000000000000000         time interp:  F    climatology:  F
-          weights: ./fluxes/BLZ-SURGE_v10_weights-bicubic.nc   pairing:    data type: week_mon   land/sea mask:
-                     iom_nf90_open ~~~ open existing file: ./fluxes/BLZ-SURGE_u10_y2021m03d08.nc in READ mode
-                    ---> ./fluxes/BLZ-SURGE_u10_y2021m03d08.nc OK
-                     iom_nf90_open ~~~ open existing file: ./fluxes/BLZ-SURGE_u10_y2021m03d08.nc in READ mode
-                    ---> ./fluxes/BLZ-SURGE_u10_y2021m03d08.nc OK
-                     iom_close ~~~ close file: ./fluxes/BLZ-SURGE_u10_y2021m03d08.nc ok
-                     iom_nf90_open ~~~ open existing file: ./fluxes/BLZ-SURGE_u10_weights-bicubic.nc in READ mode
-                    ---> ./fluxes/BLZ-SURGE_u10_weights-bicubic.nc OK
-           read src01 (rec:      1) in ./fluxes/BLZ-SURGE_u10_weights-bicubic.nc ok
-           read src02 (rec:      1) in ./fluxes/BLZ-SURGE_u10_weights-bicubic.nc ok
-           read src03 (rec:      1) in ./fluxes/BLZ-SURGE_u10_weights-bicubic.nc ok
-           read src04 (rec:      1) in ./fluxes/BLZ-SURGE_u10_weights-bicubic.nc ok
-           read wgt01 (rec:      1) in ./fluxes/BLZ-SURGE_u10_weights-bicubic.nc ok
-           read wgt02 (rec:      1) in ./fluxes/BLZ-SURGE_u10_weights-bicubic.nc ok
-           read wgt03 (rec:      1) in ./fluxes/BLZ-SURGE_u10_weights-bicubic.nc ok
-           read wgt04 (rec:      1) in ./fluxes/BLZ-SURGE_u10_weights-bicubic.nc ok
-           read wgt05 (rec:      1) in ./fluxes/BLZ-SURGE_u10_weights-bicubic.nc ok
-           read wgt06 (rec:      1) in ./fluxes/BLZ-SURGE_u10_weights-bicubic.nc ok
-           read wgt07 (rec:      1) in ./fluxes/BLZ-SURGE_u10_weights-bicubic.nc ok
-           read wgt08 (rec:      1) in ./fluxes/BLZ-SURGE_u10_weights-bicubic.nc ok
-           read wgt09 (rec:      1) in ./fluxes/BLZ-SURGE_u10_weights-bicubic.nc ok
-           read wgt10 (rec:      1) in ./fluxes/BLZ-SURGE_u10_weights-bicubic.nc ok
-           read wgt11 (rec:      1) in ./fluxes/BLZ-SURGE_u10_weights-bicubic.nc ok
-           read wgt12 (rec:      1) in ./fluxes/BLZ-SURGE_u10_weights-bicubic.nc ok
-           read wgt13 (rec:      1) in ./fluxes/BLZ-SURGE_u10_weights-bicubic.nc ok
-           read wgt14 (rec:      1) in ./fluxes/BLZ-SURGE_u10_weights-bicubic.nc ok
-           read wgt15 (rec:      1) in ./fluxes/BLZ-SURGE_u10_weights-bicubic.nc ok
-           read wgt16 (rec:      1) in ./fluxes/BLZ-SURGE_u10_weights-bicubic.nc ok
-                     iom_close ~~~ close file: ./fluxes/BLZ-SURGE_u10_weights-bicubic.nc ok
-           read u10 (rec:      2) in ./fluxes/BLZ-SURGE_u10_y2021m03d08.nc ok
-                     iom_nf90_open ~~~ open existing file: ./fluxes/BLZ-SURGE_v10_y2021m03d08.nc in READ mode
-                    ---> ./fluxes/BLZ-SURGE_v10_y2021m03d08.nc OK
-                     iom_nf90_open ~~~ open existing file: ./fluxes/BLZ-SURGE_v10_y2021m03d08.nc in READ mode
-                    ---> ./fluxes/BLZ-SURGE_v10_y2021m03d08.nc OK
-                     iom_close ~~~ close file: ./fluxes/BLZ-SURGE_v10_y2021m03d08.nc ok
-                     iom_nf90_open ~~~ open existing file: ./fluxes/BLZ-SURGE_v10_weights-bicubic.nc in READ mode
-                    ---> ./fluxes/BLZ-SURGE_v10_weights-bicubic.nc OK
-           read src01 (rec:      1) in ./fluxes/BLZ-SURGE_v10_weights-bicubic.nc ok
-           read src02 (rec:      1) in ./fluxes/BLZ-SURGE_v10_weights-bicubic.nc ok
-           read src03 (rec:      1) in ./fluxes/BLZ-SURGE_v10_weights-bicubic.nc ok
-           read src04 (rec:      1) in ./fluxes/BLZ-SURGE_v10_weights-bicubic.nc ok
-           read wgt01 (rec:      1) in ./fluxes/BLZ-SURGE_v10_weights-bicubic.nc ok
-           read wgt02 (rec:      1) in ./fluxes/BLZ-SURGE_v10_weights-bicubic.nc ok
-           read wgt03 (rec:      1) in ./fluxes/BLZ-SURGE_v10_weights-bicubic.nc ok
-           read wgt04 (rec:      1) in ./fluxes/BLZ-SURGE_v10_weights-bicubic.nc ok
-           read wgt05 (rec:      1) in ./fluxes/BLZ-SURGE_v10_weights-bicubic.nc ok
-           read wgt06 (rec:      1) in ./fluxes/BLZ-SURGE_v10_weights-bicubic.nc ok
-           read wgt07 (rec:      1) in ./fluxes/BLZ-SURGE_v10_weights-bicubic.nc ok
-           read wgt08 (rec:      1) in ./fluxes/BLZ-SURGE_v10_weights-bicubic.nc ok
-           read wgt09 (rec:      1) in ./fluxes/BLZ-SURGE_v10_weights-bicubic.nc ok
-           read wgt10 (rec:      1) in ./fluxes/BLZ-SURGE_v10_weights-bicubic.nc ok
-           read wgt11 (rec:      1) in ./fluxes/BLZ-SURGE_v10_weights-bicubic.nc ok
-           read wgt12 (rec:      1) in ./fluxes/BLZ-SURGE_v10_weights-bicubic.nc ok
-           read wgt13 (rec:      1) in ./fluxes/BLZ-SURGE_v10_weights-bicubic.nc ok
-           read wgt14 (rec:      1) in ./fluxes/BLZ-SURGE_v10_weights-bicubic.nc ok
-           read wgt15 (rec:      1) in ./fluxes/BLZ-SURGE_v10_weights-bicubic.nc ok
-           read wgt16 (rec:      1) in ./fluxes/BLZ-SURGE_v10_weights-bicubic.nc ok
-                     iom_close ~~~ close file: ./fluxes/BLZ-SURGE_v10_weights-bicubic.nc ok
-           read v10 (rec:      2) in ./fluxes/BLZ-SURGE_v10_y2021m03d08.nc ok
-   fld_read: var u10 kt =        1 (  66.0417 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =        1 (  66.0417 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-           nit000-1 surface forcing fields set to nit000
-
- zdf_mxl : mixed layer depth
- ~~~~~~~ 
-
- ssh_nxt : after sea surface height
- ~~~~~~~ 
-
- div_hor : horizontal velocity divergence 
- ~~~~~~~   
-
- dom_vvl_sf_nxt : compute after scale factors
- ~~~~~~~~~~~~~~
-
- wzv : now vertical velocity 
- ~~~~~ 
-
- dyn_keg : kinetic energy gradient trend, scheme number=           0
- ~~~~~~~
-
- dyn_zad : arakawa advection scheme
-
- dyn:vor_een : vorticity term: energy and enstrophy conserving scheme
- ~~~~~~~~~~~
-
- dyn_ldf_blp : bilaplacian operator momentum 
- ~~~~~~~~~~~~
-
- dyn_ldf : iso-level harmonic (laplacian) operator, pass=           1
- ~~~~~~~ 
-
- dyn_ldf : iso-level harmonic (laplacian) operator, pass=           2
- ~~~~~~~ 
-
- dyn:hpg_sco : hydrostatic pressure gradient trend
- ~~~~~~~~~~~   s-coordinate case, OPA original scheme used
-
- dyn_spg_ts : surface pressure gradient trend
- ~~~~~~~~~~   free surface with time splitting
+AAAAAAAA
 
 
- bdy_tide_dta : Refresh nodal factors for tidal open bdy data at kt=           1
- ~~~~~~~~~~~~~~ 
+ ===>>> : E R R O R
+         ===========
 
- div_hor : horizontal velocity divergence 
- ~~~~~~~   
-
- dom_vvl_sf_nxt : compute after scale factors
- ~~~~~~~~~~~~~~
-
- wzv : now vertical velocity 
- ~~~~~ 
-
- dyn_zdf_exp : vertical momentum diffusion - explicit operator
- ~~~~~~~~~~~ 
-
- harm_init : initialization of harmonic analysis of tides
- ~~~~~~~~~
-
- ===>>> : W A R N I N G
-         ===============
-
- end of record or file while reading namelist nam_diaharm_fast in reference namelist iostat =    -1
-         Namelist nam_diaharm_fast
-         nb_ana    =            3
-    - ssh harmonic analysis activated (ln_ana_ssh)
- Analysed frequency  :            3 Frequency 
-         - M2      1.4051890257567467E-004
-         - S2      1.4544410433286079E-004
-         - K2      1.4584231709359271E-004
- Starting harmonic analysis from Fresh 
- --------------------------
-    - Output anaf for check
- ANA F  0.99076556723281184        1.0000000000000000        1.0895666292465052     
- ANA U  -12.602552677032874        0.0000000000000000      -0.29388029568300977     
- ANA V   8.6710392999231303        6.2833307512839189        18.358423742933333     
-   160122.04167824073     
- --------------------------
-
- tra_sbc : TRAcer Surface Boundary Condition
- ~~~~~~~ 
-
- tra_zdf_exp : explicit vertical mixing on TRA
- ~~~~~~~~~~~
-
- tra_nxt : achieve the time stepping by Asselin filter and array swap
- ~~~~~~~
-
- dyn_nxt : time stepping
- ~~~~~~~
-
- ssh_swp : Asselin time filter and swap of sea surface height
- ~~~~~~~ 
-
- dom_vvl_sf_swp : - time filter and swap of scale factors
- ~~~~~~~~~~~~~~   - interpolate scale factors and compute depths for next time step
-
- stp_ctl : time-stepping control
- ~~~~~~~
-      file   : time.step                                                                        open ok
-      unit   =           20
-      status = REPLACE
-      form   = FORMATTED
-      access = SEQUENTIAL
-
-  ==>> time-step=            1  3d speed2 max:    4.3321370519808127E-013
-  ==>> time-step=            1  SSS min:   0.0000000000000000     
-      file   : solver.stat                                                                      open ok
-      unit   =           21
-      status = REPLACE
-      form   = FORMATTED
-      access = SEQUENTIAL
-
-  ==>> time-step=            1  ssh max:   0.0000000000000000     
-   fld_read: var u10 kt =        2 (  66.0417 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =        2 (  66.0417 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =        3 (  66.0417 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =        3 (  66.0417 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =        4 (  66.0417 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =        4 (  66.0417 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =        5 (  66.0417 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =        5 (  66.0417 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =        6 (  66.0417 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =        6 (  66.0417 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =        7 (  66.0417 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =        7 (  66.0417 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =        8 (  66.0417 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =        8 (  66.0417 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =        9 (  66.0418 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =        9 (  66.0418 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       10 (  66.0418 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       10 (  66.0418 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       11 (  66.0418 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       11 (  66.0418 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       12 (  66.0418 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       12 (  66.0418 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       13 (  66.0418 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       13 (  66.0418 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       14 (  66.0418 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       14 (  66.0418 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       15 (  66.0418 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       15 (  66.0418 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       16 (  66.0418 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       16 (  66.0418 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       17 (  66.0419 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       17 (  66.0419 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       18 (  66.0419 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       18 (  66.0419 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       19 (  66.0419 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       19 (  66.0419 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       20 (  66.0419 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       20 (  66.0419 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       21 (  66.0419 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       21 (  66.0419 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       22 (  66.0419 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       22 (  66.0419 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       23 (  66.0419 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       23 (  66.0419 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       24 (  66.0419 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       24 (  66.0419 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       25 (  66.0419 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       25 (  66.0419 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       26 (  66.0420 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       26 (  66.0420 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       27 (  66.0420 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       27 (  66.0420 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       28 (  66.0420 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       28 (  66.0420 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       29 (  66.0420 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       29 (  66.0420 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       30 (  66.0420 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       30 (  66.0420 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       31 (  66.0420 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       31 (  66.0420 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       32 (  66.0420 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       32 (  66.0420 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       33 (  66.0420 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       33 (  66.0420 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       34 (  66.0420 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       34 (  66.0420 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       35 (  66.0421 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       35 (  66.0421 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       36 (  66.0421 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       36 (  66.0421 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       37 (  66.0421 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       37 (  66.0421 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       38 (  66.0421 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       38 (  66.0421 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       39 (  66.0421 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       39 (  66.0421 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       40 (  66.0421 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       40 (  66.0421 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       41 (  66.0421 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       41 (  66.0421 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       42 (  66.0421 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       42 (  66.0421 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       43 (  66.0422 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       43 (  66.0422 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       44 (  66.0422 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       44 (  66.0422 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       45 (  66.0422 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       45 (  66.0422 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       46 (  66.0422 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       46 (  66.0422 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       47 (  66.0422 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       47 (  66.0422 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       48 (  66.0422 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       48 (  66.0422 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       49 (  66.0422 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       49 (  66.0422 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       50 (  66.0422 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       50 (  66.0422 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       51 (  66.0422 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       51 (  66.0422 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       52 (  66.0423 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       52 (  66.0423 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       53 (  66.0423 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       53 (  66.0423 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       54 (  66.0423 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       54 (  66.0423 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       55 (  66.0423 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       55 (  66.0423 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       56 (  66.0423 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       56 (  66.0423 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       57 (  66.0423 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       57 (  66.0423 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       58 (  66.0423 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       58 (  66.0423 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       59 (  66.0423 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       59 (  66.0423 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       60 (  66.0423 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       60 (  66.0423 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       61 (  66.0424 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       61 (  66.0424 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       62 (  66.0424 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       62 (  66.0424 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       63 (  66.0424 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       63 (  66.0424 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       64 (  66.0424 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       64 (  66.0424 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       65 (  66.0424 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       65 (  66.0424 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       66 (  66.0424 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       66 (  66.0424 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       67 (  66.0424 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       67 (  66.0424 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       68 (  66.0424 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       68 (  66.0424 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       69 (  66.0425 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       69 (  66.0425 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       70 (  66.0425 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       70 (  66.0425 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       71 (  66.0425 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       71 (  66.0425 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       72 (  66.0425 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       72 (  66.0425 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       73 (  66.0425 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       73 (  66.0425 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       74 (  66.0425 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       74 (  66.0425 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       75 (  66.0425 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       75 (  66.0425 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       76 (  66.0425 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       76 (  66.0425 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       77 (  66.0425 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       77 (  66.0425 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       78 (  66.0426 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       78 (  66.0426 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       79 (  66.0426 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       79 (  66.0426 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       80 (  66.0426 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       80 (  66.0426 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       81 (  66.0426 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       81 (  66.0426 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       82 (  66.0426 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       82 (  66.0426 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       83 (  66.0426 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       83 (  66.0426 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       84 (  66.0426 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       84 (  66.0426 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       85 (  66.0426 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       85 (  66.0426 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       86 (  66.0427 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       86 (  66.0427 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       87 (  66.0427 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       87 (  66.0427 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       88 (  66.0427 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       88 (  66.0427 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       89 (  66.0427 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       89 (  66.0427 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       90 (  66.0427 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       90 (  66.0427 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       91 (  66.0427 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       91 (  66.0427 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       92 (  66.0427 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       92 (  66.0427 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       93 (  66.0427 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       93 (  66.0427 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       94 (  66.0427 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       94 (  66.0427 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       95 (  66.0428 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       95 (  66.0428 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       96 (  66.0428 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       96 (  66.0428 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       97 (  66.0428 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       97 (  66.0428 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       98 (  66.0428 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var v10 kt =       98 (  66.0428 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
-   fld_read: var u10 kt =       99 (  66.0428 days), Y/M/D = 2021/03/08, record:   0002 (days   66.0417 <->   66.0833)
+           2  error have been found

@@ -35,7 +35,7 @@ import yaml
 #main function to run the NEMO model
 def main(config_loc=''):
     if config_loc == '':
-        parser = ArgumentParser(description='Process GRIB files')
+        parser = ArgumentParser(description='RUN NEMO worker')
         parser.add_argument('config_location', help='location of YAML config file')
         args = parser.parse_args()
         config = read_yaml(args.config_location)
@@ -157,7 +157,7 @@ def calc_nn_itend(config, timesteps):
     dt_hr = config['time_step']/(60*60)
     nn_itend_init = int(config['duration']/dt_hr)
     nn_itend = nn_itend_init + timesteps
-    nn_itend = nn_itend - (3600/config['time_step'])
+    nn_itend = int(nn_itend - (3600/config['time_step']))
     if nn_itend >= 99999999:
         print('Out of Steps Error: run model with restart disabled (False) to reset timesteps')
         nn_itend = 'NaN'
@@ -195,8 +195,8 @@ def length_restart(config, timesteps):
 def read_timestep_log(config,params):
     with open(config['config_dir']+'timestep_log.json','r') as f:
         t_log = json.load(f)
-    t0 = t_log['year']+'-'+t_log['month']+'-'+t_log['day']+'-'+t_log['hour']
-    current_t = params['year']+'-'+params['month']+'-'+params['day']+'-'+params['hour']
+    t0 = t_log['year']+'-'+t_log['month']+'-'+t_log['day']+'-'+str(config['hour_start'])
+    current_t = params['year']+'-'+params['month']+'-'+params['day']+'-'+str(config['hour_start'])
     FMT = '%Y-%m-%d-%H'
     tdelta = datetime.strptime(current_t,FMT)-datetime.strptime(t0,FMT)
     tdelta_sec = tdelta.total_seconds()
@@ -273,6 +273,7 @@ def pop_namelist(config, params, leap, weight_vars, nn_itend, day_str, restart_l
     filedata = filedata.replace('key_Q', str(restart_length))
     filedata = filedata.replace('key_R', str(nn_it000))
     filedata = filedata.replace('key_S', str(restart_write))
+    filedata = filedata.replace('key_T', str(config['hour_start'])+'00')
 
     # Write the file out again
     with open(config["config_dir"]+config['pop_namelist'], 'w') as file:

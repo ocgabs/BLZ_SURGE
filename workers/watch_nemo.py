@@ -34,76 +34,70 @@ import subprocess
 import time
 import sys
 import arrow
-from nemo_cmd.namelist import namelist2dict
-from nemo_nowcast import NowcastWorker, WorkerError
-
-NAME = 'watch_nemo'
-logger = logging.getLogger(NAME)
-#redirect stdout and stderr to log files
-sys.stdout = open('/SRC/logging/worker_logs/watch_nemo.txt', 'w')
-sys.stderr = open('/SRC/logging/worker_logs/watch_nemo_errors.txt', 'w')
+from argparse import ArgumentParser
+import yaml
+from subprocess import Popen,PIPE
 
 #Interval of how often to check the NEMO model is still running...
 POLL_INTERVAL = 1 * 60  # seconds
 
-
-def main():
-    """Set up and run the worker.
-
-    For command-line usage see:
-
-    :command:`python -m nowcast.workers.watch_nemo --help`
-    """
-    worker = NowcastWorker(NAME, description=__doc__)
-    worker.init_cli()
-    worker.run(watch_nemo, success, failure)
-
-
-def success(parsed_args):
-    logger.info('NEMO run completed')
-    msg_type = 'success'
-    return msg_type
-
-
-def failure(parsed_args):
-    logger.critical('NEMO run failed')
-    msg_type = 'failure'
-    return msg_type
-
 #function to watch nemo model it reads the time step file every min, once the time step reaches
 #its expected final value it checks the run output to see if the model run was successful.
-def watch_nemo(parsed_args, config, tell_manager):
+def main(config_loc=''):
+    if config_loc == '':
+        parser = ArgumentParser(description='Process GRIB files')
+        parser.add_argument('config_location', help='location of YAML config file')
+        args = parser.parse_args()
+        config = read_yaml(args.config_location)
+    else:
+        config = read_yaml(config_loc)
     ymd = arrow.now().format('YYYY-MM-DD') #get the current date in the specified format
-    dirs = dir_gen(config) #generate directory locations based on YAML config file
-    logger.debug(dirs)
-    args = args_gen(config) #generate command arguments based on YAML config file
-    logger.debug(args)
-    sim_length = length_simulation(dirs) #calculate length of simulation in time steps
-    logger.debug(sim_length)
-    time_step = start_t_step(dirs)
-    logger.debug(time_step)
-    time.sleep(POLL_INTERVAL)
+    sim_length = length_simulation(config) #calculate length of simulation in time steps
+    time_step = start_t_step(config)
     while time_step < sim_length: 
         #define, open and extract time step
-        time_step_file = dirs['results_dir']+'/time.step' 
+        time_step_file = config['results_dir']+'/time.step'
         with open(time_step_file) as f:
             time_step = f.readlines()
         time_step = [x.strip() for x in time_step]
         time_step = int(time_step[0])
-        logger.debug(time_step)
         #calcaulte percentage of completed model run
         percent_done = 1-((sim_length - time_step) / (sim_length))
         percent_done = int(percent_done*100)
         msg = (
-                f'timestep: {time_step} '
+                f'timestep: {time_step} of {sim_length}\n'
                 f'{percent_done}% percent complete'
             )
-        logger.info(msg)
+        print(msg)
+        container = Popen(['docker', 'ps'], stdout=PIPE, stderr=PIPE)
+        stdout, stderr = container.communicate()
+        stdout = stdout.decode('utf-8')
+        container = stdout.split('\n')
+        container = container[1].split(' ')
+        container_ID = container[0]
+        if len(container_ID) == 0:
+            print('no containers running, program terminating')
+            print('checking to see if model was successful....')
+            # check to if model run was successful
+            run_succeeded = _confirm_run_success(config, sim_length)
+            if not run_succeeded:
+                print('Run Failed')
+            return 1
+        container_name = container[2]
+        if container_name != config['container_name']:
+            print('container no longer running stopping watch process....')
+            print('checking to see if model was successful....')
+            # check to if model run was successful
+            run_succeeded = _confirm_run_success(config, sim_length)
+            if not run_succeeded:
+                print('Run Failed')
+            return 2
+
         time.sleep(POLL_INTERVAL)
     #check to if model run was successful
-    run_succeeded = _confirm_run_success(dirs, sim_length)
+    run_succeeded = _confirm_run_success(config, sim_length)
     if not run_succeeded:
-        raise WorkerError
+        print('Run Failed')
     checklist = {
         'nowcast': {
             'run date': ymd,
@@ -111,35 +105,33 @@ def watch_nemo(parsed_args, config, tell_manager):
         }
     }
     return checklist
-#generate directory locations based on YAML config file
-def dir_gen(config): 
-    dirs = {
-            'results_dir' : config['watch']['NEMO']['results_dir'],
-            }
-    return dirs
-#generate command arguments based on YAML config file
-def args_gen(config):
-    args = {
-        'duration' : config['watch']['NEMO']['duration'],
-        'config_name' : config['watch']['NEMO']['config_name'],
-        'time_step' : config['watch']['NEMO']['time_step']
-        }
-    return args
+
+'''Read in config file with all parameters required'''
+def read_yaml(YAML_loc):
+    # safe load YAML file, if file is not present raise exception
+    if not os.path.isfile(YAML_loc):
+        print('DONT PANIC: The yaml file specified does not exist')
+        return 1
+    with open(YAML_loc) as f:
+        config_file = yaml.safe_load(f)
+    config = config_file['WATCH_NEMO']
+    return config
+
 #calculate length of simulation in time steps
-def length_simulation(dirs):
-    with open(dirs['results_dir']+'namelist_cfg') as f:
+def length_simulation(config):
+    with open(config['results_dir']+'namelist_cfg') as f:
         len_sim = f.readlines()
     len_sim = len_sim[9]
     len_sim = len_sim.split(' ')
     len_sim = int(len_sim[7])
     return len_sim
 
-def start_t_step(dirs):
-    with open(dirs['results_dir']+'namelist_cfg') as f:
+def start_t_step(config):
+    with open(config['results_dir']+'namelist_cfg') as f:
         tstep = f.readlines()
     tstep = tstep[8]
     tstep = tstep.split(' ')
-    tstep = int(tstep[7])
+    tstep = int(tstep[8])
     return tstep
     
 #check to see if run was successful, tests include:
@@ -152,58 +144,58 @@ def start_t_step(dirs):
 #Does the solver.stat file exist?
 #Are the NaN values in the solver.stat file?
 #if all these pass then the model is considered to have successfully run
-def _confirm_run_success(dirs, sim_length):
+def _confirm_run_success(config, sim_length):
     run_succeeded = True
-    results_dir = dirs['results_dir']
+    results_dir = config['results_dir']
     if not os.path.isdir(results_dir):
         run_succeeded = False
-        logger.critical(f'No results directory: {results_dir}')
+        print(f'No results directory: {results_dir}')
         # Continue the rest of the checks in the temporary run directory
     if os.path.isfile(results_dir+'output.abort.nc'):
         run_succeeded = False
-        logger.critical(f'Run aborted: {results_dir/"output.abort.nc"}')
+        print(f'Run aborted: {results_dir/"output.abort.nc"}')
     try:
-        time_step_file = dirs['results_dir']+'time.step'
+        time_step_file = config['results_dir']+'time.step'
         with open(time_step_file) as f:
             time_step = f.readlines()
         time_step = [x.strip() for x in time_step]
         time_step = int(time_step[0]) 
         if time_step != sim_length:
             run_succeeded = False
-            logger.critical(
+            print(
                 f'Run failed: final time step is {time_step} not {sim_length-1}'
             )
     except FileNotFoundError:
         run_succeeded = False
-        logger.critical(f'Run failed; no time.step file')
+        print(f'Run failed; no time.step file')
         pass
     try:
-        ocean_output_file = dirs['results_dir']+'ocean.output'
+        ocean_output_file = config['results_dir']+'ocean.output'
         with open(ocean_output_file) as f:
             for line in f:
                 if 'E R R O R' in line:
                     run_succeeded = False
-                    logger.critical(
+                    print(
                         f'Run failed; 1 or more E R R O R in: {results_dir}ocean.output'
                     )
                     break
     except FileNotFoundError:
         run_succeeded = False
-        logger.critical(f'Run failed; no ocean.output file')
+        print(f'Run failed; no ocean.output file')
         pass
     try:
-        solver_stat = dirs['results_dir']+'solver.stat'
+        solver_stat = config['results_dir']+'solver.stat'
         with open(solver_stat) as f:
             for line in f:
                 if 'NaN' in line:
                     run_succeeded = False
-                    logger.critical(
+                    print(
                         f'Run failed; NaN in: {results_dir}solver.stat'
                     )
                     break
     except FileNotFoundError:
         run_succeeded = False
-        logger.critical(f'Run failed; no solver.stat file')
+        print(f'Run failed; no solver.stat file')
         pass
  #   if not (results_dir / 'restart').exists():
  #       run_succeeded = False

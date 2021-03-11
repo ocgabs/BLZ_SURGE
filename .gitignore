@@ -23,4 +23,6 @@ solver.stat
 time.step
 layout.dat
 output.namelist.dyn
-
+*.pyc
+*.png
+*.csv
