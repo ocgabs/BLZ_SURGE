@@ -152,6 +152,27 @@ def main(config_loc=''):
                 status['RUN_NEMO'] = f'run NEMO worker failure at {req_time}'
                 print(status)
                 status['NEMO_runs'] = status['NEMO_runs'] - 1
+                print('stopping container incase it started.')
+                req_time = datetime.now().strftime(FMT)
+                status['STOP_CONTAINER'] = f'stop container worker started at {req_time}'
+                print(status)
+                container_stop = stop_container.main(args.config_location)
+                req_time = datetime.now().strftime(FMT)
+                if container_stop == 0:
+                    print('container already stopped')
+                    status['STOP_CONTAINER'] = f'stop container worker ran successfully at {req_time}'
+                    print(status)
+                if container_stop == 1:
+                    print('container was still running but has been stopped')
+                    status['STOP_CONTAINER'] = f'stop container worker ran successfully at {req_time}'
+                    print(status)
+                if container_stop > 1:
+                    print(container_stop)
+                    print('stop container worker failed, program terminating')
+                    status['STOP_CONTAINER'] = f'stop container worker failed at {req_time}'
+                    status['NEMO_runs'] = status['NEMO_runs'] - 1
+                    print(status)
+                    sys.exit('container stop worker failed')
                 sys.exit('run_nemo worker failed')
 
             # watch model

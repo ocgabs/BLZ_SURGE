@@ -280,7 +280,7 @@ def pop_namelist(config, params, leap, weight_vars, nn_itend, day_str, restart_l
       file.write(filedata)
 
     checklist = {f'{start_ymd} namelist_cfg file populated'}
-    return checklist
+    return 0
 #remove old files from previous runs from flux folder
 def delete_old_fluxes(config):
     status = 'unable to delete old flux files'
