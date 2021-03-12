@@ -36,7 +36,7 @@ def main(config_loc=''):
     RUN_NEMO = False
     RUN_SARGASSIUM = False
     exit = False
-    generate_weights = False
+    generate_weights = config['generate_weights']
     first_start = True
 
     status = {'DOWNLOAD_WEATHER': 'not yet started',
@@ -53,6 +53,7 @@ def main(config_loc=''):
               'NEMO_runs': 0,
               'SARGASSIUM_runs': 0
     }
+
     print(status)
     while exit == False:
         if first_start == False:
@@ -79,22 +80,23 @@ def main(config_loc=''):
 
         if RUN_NEMO == True:
             print('Running operational NEMO model now...')
-            # run download latest atmo forcing
-            req_time = datetime.now().strftime(FMT)
-            status['DOWNLOAD_WEATHER'] = f'download weather worker started at {req_time}'
-            print(status)
-            atmo_worker = download_weather.main(args.config_location)
-            req_time = datetime.now().strftime(FMT)
-            if atmo_worker == 0:
-                print('latest atmo forcing data downloaded successfully')
-                status['DOWNLOAD_WEATHER'] = f'download weather worker successful at {req_time}'
-                print(status)
-            if atmo_worker != 0:
-                print('atmo_worker failed, terminating program')
-                status['DOWNLOAD_WEATHER'] = f'download weather worker failed at {req_time}'
-                status['NEMO_runs'] = status['NEMO_runs'] - 1
-                print(status)
-                sys.exit('download worker failed')
+            # # run download latest atmo forcing
+            # req_time = datetime.now().strftime(FMT)
+            # status['DOWNLOAD_WEATHER'] = f'download weather worker started at {req_time}'
+            # print(status)
+            # atmo_worker = download_weather.main(args.config_location)
+            # req_time = datetime.now().strftime(FMT)
+            # if atmo_worker == 0:
+            #     print('latest atmo forcing data downloaded successfully')
+            #     status['DOWNLOAD_WEATHER'] = f'download weather worker successful at {req_time}'
+            #     print(status)
+            # if atmo_worker != 0:
+            #     print(atmo_worker)
+            #     print('atmo_worker failed, terminating program')
+            #     status['DOWNLOAD_WEATHER'] = f'download weather worker failed at {req_time}'
+            #     status['NEMO_runs'] = status['NEMO_runs'] - 1
+            #     print(status)
+            #     sys.exit('download worker failed')
 
             # process forcing data
             req_time = datetime.now().strftime(FMT)
@@ -107,6 +109,7 @@ def main(config_loc=''):
                 status['PROCESS_FORCING'] = f'process weather worker successful at {req_time}'
                 print(status)
             if forcing_worker != 0:
+                print(forcing_worker)
                 print('process atmo forcing worker failed, terminating program')
                 status['PROCESS_FORCING'] = f'processing weather worker failed at {req_time}'
                 status['NEMO_runs'] = status['NEMO_runs'] - 1
@@ -125,6 +128,7 @@ def main(config_loc=''):
                     status['GENERATE_WEIGHTINGS'] = f'generate weightings worker successful at {req_time}'
                     print(status)
                 if boundary_worker != 0:
+                    print(boundary_worker)
                     print('boundary weighting generation failed, terminating program')
                     status['GENERATE_WEIGHTINGS'] = f'generate weightings worker failed at {req_time}'
                     print(status)
@@ -143,6 +147,7 @@ def main(config_loc=''):
                 status['NEMO_runs'] = status['NEMO_runs'] + 1
                 print(status)
             if run_nemo_worker != 0:
+                print(run_nemo_worker)
                 print('starting model failed, terminating program')
                 status['RUN_NEMO'] = f'run NEMO worker failure at {req_time}'
                 print(status)
@@ -160,6 +165,7 @@ def main(config_loc=''):
                 status['WATCH_NEMO'] = f'nemo ran successfully at {req_time}'
                 print(status)
             if watch_nemo_worker != 0:
+                print(watch_nemo_worker)
                 print('model run failed, terminating program')
                 status['WATCH_NEMO'] = f'run NEMO worker failure at {req_time}'
                 print(status)
@@ -180,6 +186,7 @@ def main(config_loc=''):
                 status['STOP_CONTAINER'] = f'stop container worker ran successfully at {req_time}'
                 print(status)
             if container_stop > 1:
+                print(container_stop)
                 print('stop container worker failed, program terminating')
                 status['STOP_CONTAINER'] = f'stop container worker failed at {req_time}'
                 status['NEMO_runs'] = status['NEMO_runs'] - 1

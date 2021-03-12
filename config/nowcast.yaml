@@ -7,6 +7,8 @@ MANAGER:
         SARGASSIUM_running: 168 # hours
     # POLL interval
         POLL_INTERVAL: 60 # minutes
+    # generate weighting files !!Warning!! setting this to true is not yet supported
+        generate_weights: False
 
 SUPERVISOR:
         AUTO_RESTART: false
