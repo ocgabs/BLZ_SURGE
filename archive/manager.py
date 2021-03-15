@@ -80,23 +80,23 @@ def main(config_loc=''):
 
         if RUN_NEMO == True:
             print('Running operational NEMO model now...')
-            # # run download latest atmo forcing
-            # req_time = datetime.now().strftime(FMT)
-            # status['DOWNLOAD_WEATHER'] = f'download weather worker started at {req_time}'
-            # print(status)
-            # atmo_worker = download_weather.main(args.config_location)
-            # req_time = datetime.now().strftime(FMT)
-            # if atmo_worker == 0:
-            #     print('latest atmo forcing data downloaded successfully')
-            #     status['DOWNLOAD_WEATHER'] = f'download weather worker successful at {req_time}'
-            #     print(status)
-            # if atmo_worker != 0:
-            #     print(atmo_worker)
-            #     print('atmo_worker failed, terminating program')
-            #     status['DOWNLOAD_WEATHER'] = f'download weather worker failed at {req_time}'
-            #     status['NEMO_runs'] = status['NEMO_runs'] - 1
-            #     print(status)
-            #     sys.exit('download worker failed')
+            # run download latest atmo forcing
+            req_time = datetime.now().strftime(FMT)
+            status['DOWNLOAD_WEATHER'] = f'download weather worker started at {req_time}'
+            print(status)
+            atmo_worker = download_weather.main(args.config_location)
+            req_time = datetime.now().strftime(FMT)
+            if atmo_worker == 0:
+                print('latest atmo forcing data downloaded successfully')
+                status['DOWNLOAD_WEATHER'] = f'download weather worker successful at {req_time}'
+                print(status)
+            if atmo_worker != 0:
+                print(atmo_worker)
+                print('atmo_worker failed, terminating program')
+                status['DOWNLOAD_WEATHER'] = f'download weather worker failed at {req_time}'
+                status['NEMO_runs'] = status['NEMO_runs'] - 1
+                print(status)
+                sys.exit('download worker failed')
 
             # process forcing data
             req_time = datetime.now().strftime(FMT)

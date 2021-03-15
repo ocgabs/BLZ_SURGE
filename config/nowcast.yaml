@@ -1,23 +1,20 @@
 # System configuration file for Nowcast system
 
-MANAGER:
-    # How often to run NEMO model
-        NEMO_running: 24 # hours
-    # How often to run Sargassium product
-        SARGASSIUM_running: 168 # hours
-    # POLL interval
-        POLL_INTERVAL: 60 # minutes
-    # generate weighting files !!Warning!! setting this to true is not yet supported
-        generate_weights: False
+INIT:
+        status_dir: /home/thopri/BLZ-SURGE/config/
 
-SUPERVISOR:
-        AUTO_RESTART: false
-        STARTUP_SECS: 0
-        STDOUT_LOG: /home/thopri/BLZ-SURGE/logs/manager_log.txt
-        REDIRCT_STDERR: true
-        STDERR_LOG: '' #Not needed if REDIRECT_STDERR is set to true
-        LOGFILE_MAX: 1000000 #The size (bytes) a log file is allowed to grow to until it is auto rotated.
-        LOGFILES: 5 # number of rotated logs to keep
+# TODO put paths into one section and migrate to one work dir string
+#PATHS:
+#      work_dir: /home/thopri/BLZ-SURGE
+#      config_dir: /config
+#      status_dir: /config
+#      grib_dir: /grib
+#      netcdf_dir: /netcdf
+#      container_work_dir: /BLZ-SURGE
+#      netcdf_cont_dir: /netcdf
+#      namelist_cont_dir: /namelist
+#      weights_cont_dir: /weights
+#      container_log: /logs
 
 #Download Weather worker configuration
 weather:
@@ -49,6 +46,8 @@ weather:
         forecast_hrs: 120
     # Destination directory for downloaded GFS model GRIB data files
         dest_dir: '/home/thopri/BLZ-SURGE/grib/'
+        POLL_INTERVAL: 86400000 #miliseconds
+        status_dir: /home/thopri/BLZ-SURGE/config/
 
 #Forcing process worker configuration
 forcing:
@@ -79,6 +78,8 @@ forcing:
         grib_dir: '/home/thopri/BLZ-SURGE/grib/'
     #Config name NOTE: do NOT use - in the name as it will break parsing of file names
         netcdf_name: BLZ-SURGE
+        config_dir: /home/thopri/BLZ-SURGE/config/
+        POLL_INTERVAL: 600000 # milliseconds
 
 #Generate Boundary worker configuration
 generate:
@@ -127,7 +128,7 @@ RUN_NEMO:
   # Name of the NEMO configuration;
         config_name: BLZ-SURGE
    # Use restart file or not
-        restart: true
+        restart: false
   # restart interval (same as atmo model frequency)
         restart_int: 24 #hours
   # Name of the model domain coordinates file.
@@ -145,6 +146,8 @@ RUN_NEMO:
         hour_start: '01' # 1 am
   # where to save container terminal output in log file
         container_log: /home/thopri/BLZ-SURGE/logs/
+        status_dir: /home/thopri/BLZ-SURGE/config/
+        POLL_INTERVAL: 600000 #miliseconds
 
 #Watch NEMO worker configuration
 WATCH_NEMO:
@@ -158,6 +161,9 @@ WATCH_NEMO:
         config_name: BLZ-SURGE
     # name of container to watch
         container_name: docker.io/thopri/nemo-surge:8814
+        status_dir: /home/thopri/BLZ-SURGE/config/
+        POLL_INTERVAL: 600000 #miliseconds
+        WATCH_INTERVAL: 1 # minutes
 
 #Make Plots NEMO worker configuration
 make:
@@ -213,10 +219,26 @@ seed:
         tiff_name: 'SargassoT7.tif'
     # string to parse correct image, i.e. unique part of filename
         parse_ID: 'DENSITY.png'
+        status_dir: /home/thopri/BLZ-SURGE/config/
+        POLL_INTERVAL: 86400000 #miliseconds
+
+RUN_PARCELS:
+        POLL_INTERVAL: 600000 #miliseconds
+        lon_csv: '/home/thopri/BLZ-SURGE/sargassium/ilon.csv'
+        lat_csv: '/home/thopri/BLZ-SURGE/sargassium/ilat.csv'
+        data_path: '/home/thopri/BLZ-SURGE/INPUTS/'
+        ufile_parse: 'BLZ-SURGE_1h_*U.nc'
+        vfile_parse: 'BLZ-SURGE_1h_*V.nc'
+        grid_file: '/home/thopri/BLZ-SURGE/INPUTS/BLZE12_coordinates.nc'
+        out_file: 'nBelize_nemo_sargaso_particlesT2'
+        out_dir: '/home/thopri/BLZ-SURGE/RUN_PARCELS/'
+        status_dir: '/home/thopri/BLZ-SURGE/config/'
 
 STOP_CONTAINER:
     # name of container to stop
         container_name: docker.io/thopri/nemo-surge:8814
+        status_dir: /home/thopri/BLZ-SURGE/config/
+        POLL_INTERVAL: 600000 #miliseconds
 
 
 #Clean up worker configuration

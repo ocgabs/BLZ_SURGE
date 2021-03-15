@@ -31,6 +31,8 @@ import re
 from subprocess import Popen, PIPE
 from argparse import ArgumentParser
 import yaml
+from time import sleep
+import json
 
 #main function to run the NEMO model
 def main(config_loc=''):
@@ -41,42 +43,51 @@ def main(config_loc=''):
         config = read_yaml(args.config_location)
     else:
         config = read_yaml(config_loc)
+    with open(config['status_dir'] + 'worker_status.json', 'r') as fp:
+        status = json.load(fp)
+    if status['RUN_NEMO'] == False:
+        print('No new data, going back to sleep for '+ str(config['POLL_INTERVAL']/60000) + ' minutes')
+    if status['RUN_NEMO'] == True:
+        print('New forcing data.... running NEMO now')
+        #get start date in specified format
+        start_ymd = arrow.now().format('YYYY-MM-DD-HH')
+        delete = delete_old_fluxes(config) #remove old flux boundary files
+        move = move_netcdf_files(config) #move netcdf boundary files to flux folder
+        params = process_filename(config) #read config parameters from filename
+        move1 = move_weight_files(config) #move weight files to flux folder
+        weight_vars = read_weight_vars(config) #read weight parameters from files and populate dictionary
+        leap = is_leap(params)# is it a leap year?
+        day_str = day_of_the_week(params) #generate a string of correct format specifying day of the week
+        if config['restart'] == True:
+            print('restart flag enabled, using restart file.......')
+            print('checking timestep log .........')
+            timesteps, date0 = read_timestep_log(config, params)
+            nn_it000 = timesteps + 1
+            #nn_it000 = read_nn_it000(args, dirs)
+            nn_itend = calc_nn_itend(config, timesteps) #length of simulation in time steps
+            restart_length = length_restart(config, timesteps)
+            restart_write = write_restart(config)
+        else:
+            print('restart disabled, starting new timestep log.......')
+            with open(config['config_dir']+'timestep_log.json','w') as fp:
+                json.dump(params, fp)
+            nn_it000 = 1
+            date0 = params['year']+params['month']+params['day']
+            nn_itend = int(sim_length(config) - (3600/config['time_step']))
+            restart_length = length_restart(config, nn_it000)
+            restart_write = write_restart(config)
+        pop_namelist(config, params, leap, weight_vars, nn_itend, day_str, restart_length, nn_it000, restart_write, date0) #populate namelist file with
+        #all the required parameters to run the model, (start and end date etc)
+        #start the model
+        start_nemo(config)
+        checklist = {f'{start_ymd} started nemo model'}
+        status['RUN_NEMO'] = False
+        status['WATCH_NEMO'] = True
+        with open(config['status_dir'] + 'worker_status.json', 'w') as fp:
+            json.dump(status, fp)
+        print('Run Worker Complete, going to sleep for ' + str(config['POLL_INTERVAL']/60000) + ' minutes')
 
-    #get start date in specified format
-    start_ymd = arrow.now().format('YYYY-MM-DD-HH')
-    delete = delete_old_fluxes(config) #remove old flux boundary files
-    move = move_netcdf_files(config) #move netcdf boundary files to flux folder
-    params = process_filename(config) #read config parameters from filename
-    move1 = move_weight_files(config) #move weight files to flux folder
-    weight_vars = read_weight_vars(config) #read weight parameters from files and populate dictionary
-    leap = is_leap(params)# is it a leap year?
-    day_str = day_of_the_week(params) #generate a string of correct format specifying day of the week
-    if config['restart'] == True:
-        print('restart flag enabled, using restart file.......')
-        print('checking timestep log .........')
-        timesteps, date0 = read_timestep_log(config, params)
-        nn_it000 = timesteps + 1
-        #nn_it000 = read_nn_it000(args, dirs)
-        nn_itend = calc_nn_itend(config, timesteps) #length of simulation in time steps
-        restart_length = length_restart(config, timesteps)
-        restart_write = write_restart(config)
-    else:
-        print('restart disabled, starting new timestep log.......') 
-        with open(config['config_dir']+'timestep_log.json','w') as fp:
-            json.dump(params, fp)
-        nn_it000 = 1
-        date0 = params['year']+params['month']+params['day']
-        nn_itend = int(sim_length(config) - (3600/config['time_step']))
-        restart_length = length_restart(config, nn_it000)
-        restart_write = write_restart(config)
-    pop_namelist(config, params, leap, weight_vars, nn_itend, day_str, restart_length, nn_it000, restart_write, date0) #populate namelist file with
-    #all the required parameters to run the model, (start and end date etc)
-    #start the model
-    start_nemo(config)
-
-    checklist = {f'{start_ymd} started nemo model'}
-
-    return checklist
+    return 0
 
 '''Read in config file with all parameters required'''
 def read_yaml(YAML_loc):

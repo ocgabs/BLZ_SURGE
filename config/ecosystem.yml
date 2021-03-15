@@ -1,0 +1,59 @@
+#Ecosystem config file for PM2 to run the components of the NEMO Sargassium Operational Forecast System
+
+apps:
+  - script          : ./workers/download_weather.py
+    name            : 'download_weather'
+    cwd             : '/home/thopri/BLZ-SURGE'
+    args            : '-- config/nowcast.yaml'
+    watch           : false
+    restart_delay   : 86400000
+    log_date_format : 'YYYY-MM-DD HH:mm:ss.SSS'
+
+  - script          : ./workers/process_forcing.py
+    name            : 'process_forcing'
+    cwd             : '/home/thopri/BLZ-SURGE'
+    args            : '-- config/nowcast.yaml'
+    watch           : false
+    restart_delay   : 600000
+    log_date_format : 'YYYY-MM-DD HH:mm:ss.SSS'
+
+  - script          : ./workers/run_nemo.py
+    name            : 'run_nemo'
+    cwd             : '/home/thopri/BLZ-SURGE'
+    args            : '-- config/nowcast.yaml'
+    watch           : false
+    restart_delay   : 600000
+    log_date_format : 'YYYY-MM-DD HH:mm:ss.SSS'
+
+  - script          : ./workers/watch_nemo.py
+    name            : 'watch_nemo'
+    cwd             : '/home/thopri/BLZ-SURGE'
+    args            : '-- config/nowcast.yaml'
+    watch           : false
+    restart_delay   : 600000
+    log_date_format : 'YYYY-MM-DD HH:mm:ss.SSS'
+
+  - script          : ./workers/stop_container.py
+    name            : 'stop_container'
+    cwd             : '/home/thopri/BLZ-SURGE'
+    args            : '-- config/nowcast.yaml'
+    watch           : false
+    restart_delay   : 600000
+    log_date_format : 'YYYY-MM-DD HH:mm:ss.SSS'
+
+  - script          : ./workers/rasteriogeoref.py
+    name            : 'get_sargassium'
+    cwd             : '/home/thopri/BLZ-SURGE'
+    args            : '-- config/nowcast.yaml'
+    watch           : false
+    restart_delay   : 86400000
+    log_date_format : 'YYYY-MM-DD HH:mm:ss.SSS'
+
+  - script          : ./workers/v5Belize_Parcels.py
+    name            : 'run_parcels'
+    cwd             : '/home/thopri/BLZ-SURGE'
+    args            : '-- config/nowcast.yaml'
+    watch           : false
+    restart_delay   : 600000
+    log_date_format : 'YYYY-MM-DD HH:mm:ss.SSS'
+

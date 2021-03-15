@@ -7,9 +7,9 @@ from datetime import timedelta as delta
 from os import path
 import time
 from netCDF4 import Dataset
+
+
 import csv
-
-
 with open('/home/thopri/BLZ-SURGE/sargassium/ilon.csv') as csvfile:
     file1 = csv.reader(csvfile, delimiter=',')
     LOS = []
@@ -18,12 +18,13 @@ with open('/home/thopri/BLZ-SURGE/sargassium/ilon.csv') as csvfile:
 #        LA = row[1]
         LOS.append(LO)
 #        LAS.append(LA)
-with open(r'/home/thopri/BLZ-SURGE/sargassium/ilat.csv') as csvfile:
+with open('/home/thopri/BLZ-SURGE/sargassium/ilat.csv') as csvfile:
     file2 = csv.reader(csvfile, delimiter=',')
     LAS = []
     for row in file2:
         LA = row[0]
         LAS.append(LA)
+print(type(LAS))
 
 start = time.time()
 # data_path = path.join(path.dirname(__file__), 'NemoCurvilinear_data/')
@@ -46,16 +47,16 @@ field_set = FieldSet.from_nemo(filenames, variables, dimensions)
 #field_set.U.show()
 
     # Make particles initial position list
-#nc_fid = Dataset(grid_file, 'r') #open grid file nc to read
-#lats = nc_fid.variables['nav_lat'][:]  # extract/copy the data
-#lons = nc_fid.variables['nav_lon'][:]
+# nc_fid = Dataset(grid_file, 'r') #open grid file nc to read
+# lats = nc_fid.variables['nav_lat'][:]  # extract/copy the data
+# lons = nc_fid.variables['nav_lon'][:]
 
-#lonE=lons[:,169-3]
-#latE=lats[:,169-3]
-
-#npart = 3000
-#lonp = [i for i in np.linspace(min(lonE), max(lonE), npart)]
-#latp = [i for i in np.linspace(15.98, max(latE), npart)] #this makes a list!
+# lonE=lons[:,169-3]
+# latE=lats[:,169-3]
+#
+# npart = 3000
+# lonp = [i for i in np.linspace(min(lonE), max(lonE), npart)]
+# latp = [i for i in np.linspace(15.98, max(latE), npart)] #this makes a list!
 	
 pset = ParticleSet.from_list(field_set, JITParticle, lon=LOS, lat=LAS)
 pfile = ParticleFile("nBelize_nemo_sargaso_particlesT2", pset, outputdt=delta(hours=0.5))

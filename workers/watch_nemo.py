@@ -37,9 +37,8 @@ import arrow
 from argparse import ArgumentParser
 import yaml
 from subprocess import Popen,PIPE
-
-#Interval of how often to check the NEMO model is still running...
-POLL_INTERVAL = 1 * 60  # seconds
+import json
+from time import sleep
 
 #function to watch nemo model it reads the time step file every min, once the time step reaches
 #its expected final value it checks the run output to see if the model run was successful.
@@ -51,60 +50,78 @@ def main(config_loc=''):
         config = read_yaml(args.config_location)
     else:
         config = read_yaml(config_loc)
-    ymd = arrow.now().format('YYYY-MM-DD') #get the current date in the specified format
-    sim_length = length_simulation(config) #calculate length of simulation in time steps
-    time_step = start_t_step(config)
-    while time_step < sim_length: 
-        #define, open and extract time step
-        time_step_file = config['results_dir']+'/time.step'
-        with open(time_step_file) as f:
-            time_step = f.readlines()
-        time_step = [x.strip() for x in time_step]
-        time_step = int(time_step[0])
-        #calcaulte percentage of completed model run
-        percent_done = 1-((sim_length - time_step) / (sim_length))
-        percent_done = int(percent_done*100)
-        msg = (
-                f'timestep: {time_step} of {sim_length}\n'
-                f'{percent_done}% percent complete'
-            )
-        print(msg)
-        container = Popen(['docker', 'ps'], stdout=PIPE, stderr=PIPE)
-        stdout, stderr = container.communicate()
-        stdout = stdout.decode('utf-8')
-        container = stdout.split('\n')
-        container = container[1].split(' ')
-        container_ID = container[0]
-        if len(container_ID) == 0:
-            print('no containers running, program terminating')
-            print('checking to see if model was successful....')
-            # check to if model run was successful
-            run_succeeded = _confirm_run_success(config, sim_length)
-            if not run_succeeded:
-                print('Run Failed')
-            return 1
-        container_name = container[2]
-        if container_name != config['container_name']:
-            print('container no longer running stopping watch process....')
-            print('checking to see if model was successful....')
-            # check to if model run was successful
-            run_succeeded = _confirm_run_success(config, sim_length)
-            if not run_succeeded:
-                print('Run Failed')
-            return 2
+    with open(config['status_dir'] + 'worker_status.json', 'r') as fp:
+        status = json.load(fp)
+    if status['WATCH_NEMO'] == False:
+        print('NEMO not running, going back to sleep for '+ str(config['POLL_INTERVAL']/60000) + ' minutes')
+    if status['WATCH_NEMO'] == True:
 
-        time.sleep(POLL_INTERVAL)
-    #check to if model run was successful
-    run_succeeded = _confirm_run_success(config, sim_length)
-    if not run_succeeded:
-        print('Run Failed')
-    checklist = {
-        'nowcast': {
-            'run date': ymd,
-            'completed': run_succeeded,
+        print('NEMO running, going to watch it.....')
+        ymd = arrow.now().format('YYYY-MM-DD') #get the current date in the specified format
+        sim_length = length_simulation(config) #calculate length of simulation in time steps
+        time_step = start_t_step(config)
+        while time_step < sim_length:
+            #define, open and extract time step
+            time_step_file = config['results_dir']+'/time.step'
+            with open(time_step_file) as f:
+                time_step = f.readlines()
+            time_step = [x.strip() for x in time_step]
+            time_step = int(time_step[0])
+            #calcaulte percentage of completed model run
+            percent_done = 1-((sim_length - time_step) / (sim_length))
+            percent_done = int(percent_done*100)
+            msg = (
+                    f'timestep: {time_step} of {sim_length}\n'
+                    f'{percent_done}% percent complete'
+                )
+            print(msg)
+            container = Popen(['docker', 'ps'], stdout=PIPE, stderr=PIPE)
+            stdout, stderr = container.communicate()
+            stdout = stdout.decode('utf-8')
+            container = stdout.split('\n')
+            container = container[1].split(' ')
+            container =  [x for x in container if x]
+            try:
+                container_ID = container[0]
+            except IndexError:
+                print('no containers running, program terminating')
+                print('checking to see if model was successful....')
+                # check to if model run was successful
+                run_succeeded = _confirm_run_success(config, sim_length)
+                if not run_succeeded:
+                    print('Run Failed')
+                    status['WATCH_NEMO'] = False
+                return 1
+            print('Container ID: '+str(container_ID))
+            container_name = container[1]
+            if container_name != config['container_name']:
+                print('container no longer running stopping watch process....')
+                print('checking to see if model was successful....')
+                # check to if model run was successful
+                run_succeeded = _confirm_run_success(config, sim_length)
+                if not run_succeeded:
+                    print('Run Failed')
+                    status['WATCH_NEMO'] = False
+                return 2
+
+            time.sleep(config['WATCH_INTERVAL']*60)
+        #check to if model run was successful
+        run_succeeded = _confirm_run_success(config, sim_length)
+        if not run_succeeded:
+            print('Run Failed')
+        checklist = {
+            'nowcast': {
+                'run date': ymd,
+                'completed': run_succeeded,
+            }
         }
-    }
-    return checklist
+        status['WATCH_NEMO'] = False
+        status['STOP_CONTAINER'] = True
+        with open(config['status_dir'] + 'worker_status.json', 'w') as fp:
+            json.dump(status, fp)
+        print('Watch Worker Complete, going to sleep for ' + str(config['POLL_INTERVAL']/60000) + ' minutes')
+
+    return 0
 
 '''Read in config file with all parameters required'''
 def read_yaml(YAML_loc):

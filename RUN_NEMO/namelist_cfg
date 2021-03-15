@@ -6,18 +6,18 @@
 &namrun        !   parameters of the run
 !-----------------------------------------------------------------------
   cn_exp      =  "BLZ-SURGE"  !  experience name
-  nn_it000    =  259201   !  first time step
-  nn_itend    = 687600 !  365 days 8 per hour ! 70080   ! plus 30*4 days
-  nn_date0    =  20210308 !  date at nit_0000 (format yyyymmdd) used if ln_rstart=F or (ln_rstart=T and nn_rstctl=0 or 1)
+  nn_it000    =  1   !  first time step
+  nn_itend    = 428400 !  365 days 8 per hour ! 70080   ! plus 30*4 days
+  nn_date0    =  20210315 !  date at nit_0000 (format yyyymmdd) used if ln_rstart=F or (ln_rstart=T and nn_rstctl=0 or 1)
   nn_time0    =  0100   !  initial time of day in hhmm
   nn_leapy    =  1   !  Leap year calendar (1) or not (0)
-  ln_rstart   =  .True.  !  start from rest (F) or from a restart file (T)
+  ln_rstart   =  .False.  !  start from rest (F) or from a restart file (T)
     nn_euler    =    1            !  = 0 : start with forward time step if ln_rstart=T
     nn_rstctl   =    2            !  restart control ==> activated only if ln_rstart=T
     !                             !    = 0 nn_date0 read in namelist ; nn_it000 : read in namelist
     !                             !    = 1 nn_date0 read in namelist ; nn_it000 : check consistancy between namelist and restart
     !                             !    = 2 nn_date0 read in restart  ; nn_it000 : check consistancy between namelist and restart
-    cn_ocerst_in    = "BLZ-SURGE_00259200_restart"   !  suffix of ocean restart name (input)
+    cn_ocerst_in    = "BLZ-SURGE_00000001_restart"   !  suffix of ocean restart name (input)
     cn_ocerst_indir = "./Restart_files"         !  directory from which to read input ocean restarts
     cn_ocerst_out   = "restart"   !  suffix of ocean restart name (output)
     cn_ocerst_outdir= "./Restart_files"         !  directory in which to write output ocean restarts
@@ -66,8 +66,8 @@
                             ! (F) for no fluxes (ie tide only case)
   !              !  file name                    ! frequency (hours) ! variable  ! time interp. !  clim  ! 'yearly'/ ! weights  ! rotation ! land/sea mask !
   !              !                               !  (if <0  months)  !   name    !   (logical)  !  (T/F) ! 'monthly' ! filename ! pairing  ! filename      !
-     sn_wndi     = 'BLZ-SURGE_u10'              ,       1           ,'u10',   .false.     , .false. , 'week_thurs'  ,'BLZ-SURGE_u10_weights-bicubic.nc' , '' , ''
-     sn_wndj     = 'BLZ-SURGE_v10'              ,       1           ,'v10',   .false.     , .false. , 'week_thurs'  ,'BLZ-SURGE_v10_weights-bicubic.nc' , '' , ''
+     sn_wndi     = 'BLZ-SURGE_u10'              ,       1           ,'u10',   .false.     , .false. , 'week_mon'  ,'BLZ-SURGE_u10_weights-bicubic.nc' , '' , ''
+     sn_wndj     = 'BLZ-SURGE_v10'              ,       1           ,'v10',   .false.     , .false. , 'week_mon'  ,'BLZ-SURGE_v10_weights-bicubic.nc' , '' , ''
   !   sn_wndi     = 'BLZ-SURGE_u10'              ,       1           ,'u10',   .false.     , .false. , 'monthly'  ,'BLZ-SURGE_u10_weights-bicubic.nc' , '' , ''
   !   sn_wndj     = 'BLZ-SURGE_v10'              ,       1           ,'v10',   .false.     , .false. , 'monthly'  ,'BLZ-SURGE_v10_weights-bicubic.nc' , '' , ''
 
@@ -92,7 +92,7 @@
 !-----------------------------------------------------------------------
 !          !  file name  ! frequency (hours) ! variable  ! time interp. !  clim  ! 'yearly'/ ! weights  ! rotation ! land/sea mask !
 !          !             !  (if <0  months)  !   name    !   (logical)  !  (T/F) ! 'monthly' ! filename ! pairing  ! filename      !
-   sn_apr= 'BLZ-SURGE_msl',        1         ,   'msl' ,    .false.    , .false., 'week_thurs'   ,  'BLZ-SURGE_msl_weights-bicubic.nc'      ,   ''     ,  ''
+   sn_apr= 'BLZ-SURGE_msl',        1         ,   'msl' ,    .false.    , .false., 'week_mon'   ,  'BLZ-SURGE_msl_weights-bicubic.nc'      ,   ''     ,  ''
 !  sn_apr= 'BLZ-SURGE_msl',        1         ,   'msl' ,    .false.    , .false., 'monthly'   ,  'BLZ-SURGE_msl_weights-bicubic.nc'      ,   ''     ,  ''
 !   sn_apr= 'pressure_amm7',        1         ,   'air_pressure_at_sea_level' ,    .true.    , .false., 'daily'   ,  ''      ,   ''     ,  ''
    cn_dir      = './fluxes/'!  root directory for the location of the bulk files
@@ -240,8 +240,8 @@
 !-----------------------------------------------------------------------
 &nam_diaharm   !   Harmonic analysis of tidal constituents ('key_diaharm')
 !-----------------------------------------------------------------------
-    nit000_han = 259201     ! First time step used for harmonic analysis
-    nitend_han = 687600     ! Last time step used for harmonic analysis
+    nit000_han = 1     ! First time step used for harmonic analysis
+    nitend_han = 428400     ! Last time step used for harmonic analysis
     nstep_han  = 20  ! 5 mins       ! Time step frequency for harmonic analysis
     tname(1)   = 'M2'      ! Name of tidal constituents
     tname(2)   = 'S2'

@@ -19,6 +19,8 @@ from argparse import ArgumentParser
 from subprocess import Popen, PIPE
 import yaml
 import os
+from time import sleep
+import json
 
 def main(config_loc=''):
     if config_loc == '':
@@ -29,32 +31,47 @@ def main(config_loc=''):
     else:
         config = read_yaml(config_loc)
 
-    container = Popen(['docker', 'ps'], stdout=PIPE, stderr=PIPE)
-    stdout, stderr = container.communicate()
-    stdout = stdout.decode('utf-8')
-    stderr = stderr.decode('utf-8')
-    container = stdout.split('\n')
-    container = container[1].split(' ')
-    container_ID = container[0]
-    if len(container_ID) == 0:
-        print('no containers running, program terminating')
-        return 0
-    container_name = container[2]
+    with open(config['status_dir'] + 'worker_status.json', 'r') as fp:
+        status = json.load(fp)
+    if status['STOP_CONTAINER'] == False:
+        print('NEMO not finished or not running, going back to sleep for '+ str(config['POLL_INTERVAL']/60000) + ' minutes')
+    if status['STOP_CONTAINER'] == True:
 
-    if container_name == config['container_name']:
-        stop_container = Popen(['docker', 'stop', container_ID], stdout=PIPE, stderr=PIPE)
-        stdout, stderr = stop_container.communicate()
+        print('NEMO finished, going to check the container stopped.....')
+
+        container = Popen(['docker', 'ps'], stdout=PIPE, stderr=PIPE)
+        stdout, stderr = container.communicate()
         stdout = stdout.decode('utf-8')
-        stderr = stderr.decode('utf-8')
-        print(stderr)
-        print(stdout)
-        return 1
+        container = stdout.split('\n')
+        container = container[1].split(' ')
+        container = [x for x in container if x]
+        container_ID = container[0]
+        if len(container_ID) == 0:
+            print('no containers running, all is well')
+            return 0
+        container_name = container[1]
 
-    if container_name != config['container_name']:
-        print(container_name)
-        print('valid container not found, check container name above with config file...')
-        return 2
+        if container_name == config['container_name']:
+            print('container still running, going to stop it now check stdout and stderr below.')
+            stop_container = Popen(['docker', 'stop', container_ID], stdout=PIPE, stderr=PIPE)
+            stdout, stderr = stop_container.communicate()
+            stdout = stdout.decode('utf-8')
+            stderr = stderr.decode('utf-8')
+            print(stderr)
+            print(stdout)
+            return 1
 
+        if container_name != config['container_name']:
+            print(container_name)
+            print('valid container not found, check container name above with config file...')
+            return 2
+        status['STOP_CONTAINER'] = False
+        status['CLEAN_UP'] = True
+        with open(config['status_dir'] + 'worker_status.json', 'w') as fp:
+            json.dump(status, fp)
+        print('Stop container Worker Complete, going to sleep for ' + str(config['POLL_INTERVAL']/60000) + ' minutes')
+
+    return 0
 
 '''Read in config file with all parameters required'''
 def read_yaml(YAML_loc):
@@ -64,7 +81,7 @@ def read_yaml(YAML_loc):
         return 1
     with open(YAML_loc) as f:
         config_file = yaml.safe_load(f)
-    config = config_file['WATCH_NEMO']
+    config = config_file['STOP_CONTAINER']
     return config
 
 

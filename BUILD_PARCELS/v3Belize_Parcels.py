@@ -10,9 +10,9 @@ from netCDF4 import Dataset
 
 start = time.time()
 # data_path = path.join(path.dirname(__file__), 'NemoCurvilinear_data/')
-data_path = 'INPUTS/'
-ufiles = sorted(glob(data_path+'BLZE12_1h_*U.nc'))
-vfiles = sorted(glob(data_path+'BLZE12_1h_*V.nc'))
+data_path = '/home/thopri/BLZ-SURGE/INPUTS/'
+ufiles = sorted(glob(data_path+'BLZ-SURGE_1h_*U.nc'))
+vfiles = sorted(glob(data_path+'BLZ-SURGE_1h_*V.nc'))
 
 grid_file = 'INPUTS/BLZE12_coordinates.nc'
 filenames = {'U': {'lon': grid_file,

@@ -43,6 +43,8 @@ import numpy as np
 import glob
 import yaml
 from argparse import ArgumentParser
+import json
+from time import sleep
 
 #Process Forcing function to convert the hourly GRIB files into combined NETCDF file for each variable
 def main(config_loc=''):
@@ -54,26 +56,38 @@ def main(config_loc=''):
     else:
         config = read_yaml(config_loc)
     ymd = arrow.now().format('YYYY-MM-DD') #Get current data in given format
-    dir = dir_gen(config) #get directory values from YAML file
-    model_run = ModelRun(dir) #Calculate the model run hour by finding the latest GRIB download
-    arg = arg_gen(config, model_run)#get command arguments from YAML file
-    t = ForeCast(arg) #Generate list of file forcast numbers in a specifc format
-    i = 0
-    lats, lons = getlatandlon(config, arg, dir, model_run, t, i) #get lat and lon values from a GRIB file
-    delete = delete_old_netcdf(dir) #remove any existing NETCDF files from destination folder
-    #The C parameter refers to the three variable NETCDF files that need to created, for a value of 0, 1, and 2 
-    #a different variable netcdf file is created.
-    C = 0
-    createNetCDF(lats, lons, dir, C, arg) #create empty NETCDF file with correct dimensions and variables
-    loaddataNetCDF(config, arg, dir, model_run, t, i, C) #Load data into created NETCDF file
-    C = 1
-    createNetCDF(lats, lons, dir, C, arg)
-    loaddataNetCDF(config, arg, dir, model_run, t, i, C)
-    C = 2
-    createNetCDF(lats, lons, dir, C, arg)
-    loaddataNetCDF(config, arg, dir, model_run, t, i, C)
 
-    checklist = {f'{ymd} forcing': "Files successfully processed"}
+    with open(config['forcing']['process']['config_dir'] + 'worker_status.json', 'r') as fp:
+        status = json.load(fp)
+    if status['PROCESS_FORCING'] == False:
+        print('No new files to process, going to sleep for '+str(config['forcing']['process']['POLL_INTERVAL']/60000)+' minutes')
+    if status['PROCESS_FORCING'] == True:
+        print('Process Worker needs to be run, running now.....')
+        dir = dir_gen(config) #get directory values from YAML file
+        model_run = ModelRun(dir) #Calculate the model run hour by finding the latest GRIB download
+        arg = arg_gen(config, model_run)#get command arguments from YAML file
+        t = ForeCast(arg) #Generate list of file forcast numbers in a specifc format
+        i = 0
+        lats, lons = getlatandlon(config, arg, dir, model_run, t, i) #get lat and lon values from a GRIB file
+        delete = delete_old_netcdf(dir) #remove any existing NETCDF files from destination folder
+        #The C parameter refers to the three variable NETCDF files that need to created, for a value of 0, 1, and 2
+        #a different variable netcdf file is created.
+        C = 0
+        createNetCDF(lats, lons, dir, C, arg) #create empty NETCDF file with correct dimensions and variables
+        loaddataNetCDF(config, arg, dir, model_run, t, i, C) #Load data into created NETCDF file
+        C = 1
+        createNetCDF(lats, lons, dir, C, arg)
+        loaddataNetCDF(config, arg, dir, model_run, t, i, C)
+        C = 2
+        createNetCDF(lats, lons, dir, C, arg)
+        loaddataNetCDF(config, arg, dir, model_run, t, i, C)
+
+        checklist = {f'{ymd} forcing': "Files successfully processed"}
+        status['PROCESS_FORCING'] = False
+        status['RUN_NEMO'] = True
+        with open(config['forcing']['process']['config_dir'] + 'worker_status.json', 'w') as fp:
+            json.dump(status, fp)
+
     return 0
 
 '''Read in config file with all parameters required'''
