@@ -15,8 +15,10 @@ def main(config_loc=''):
     if config_loc == '':
         parser = ArgumentParser(description='RUN PARCELS worker')
         parser.add_argument('config_location', help='location of YAML config file')
-        args = parser.parse_args()
+        parser.add_argument('eco_location', help='location of ecosystem file')
         parser.add_argument('-f', '--force', action='store_true', help='force start of worker')
+        args = parser.parse_args()
+
         config = read_yaml(args.config_location)
     else:
         config = read_yaml(config_loc)

@@ -46,6 +46,7 @@ def main(config_loc=''):
     if config_loc == '':
         parser = ArgumentParser(description='Process GRIB files')
         parser.add_argument('config_location', help='location of YAML config file')
+        parser.add_argument('eco_location', help='location of ecosystem file')
         parser.add_argument('-f', '--force', action='store_true', help='force start of worker')
         args = parser.parse_args()
         if args.force == True:

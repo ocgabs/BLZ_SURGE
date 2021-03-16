@@ -35,6 +35,7 @@ def main(config_loc=''):
     if config_loc == '':
         parser = ArgumentParser(description='RUN NEMO worker')
         parser.add_argument('config_location', help='location of YAML config file')
+        parser.add_argument('eco_location', help='location of ecosystem file')
         args = parser.parse_args()
         config = read_yaml(args.config_location)
     else:
