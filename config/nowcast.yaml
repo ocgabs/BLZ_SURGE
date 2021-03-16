@@ -72,7 +72,7 @@ forcing:
     #Template of GRIB file names
         file_template: 'gfs.t{model_run}z.pgrb2.0p25.f'
     #Destination directory of NetCDF files
-        netcdf_dest_dir: '/home/thopri/BLZ-SURGE/netcdf/'
+        netcdf_dest_dir: '/home/thopri/BLZ-SURGE/netcdf/GFS/'
     #Grib downloaded files location
         grib_dir: '/home/thopri/BLZ-SURGE/grib/'
     #Config name NOTE: do NOT use - in the name as it will break parsing of file names
@@ -108,7 +108,7 @@ RUN_NEMO:
   #weighting file location
         weights_dir: /home/thopri/BLZ-SURGE/weights/
   #netcdf file location
-        netcdf_dir: /home/thopri/BLZ-SURGE/netcdf/
+        netcdf_dir: /home/thopri/BLZ-SURGE/netcdf/GFS/
   #location of boundary data for model
         boundary_dest: /home/thopri/BLZ-SURGE/RUN_NEMO/fluxes/
   #location of restart files
@@ -230,19 +230,18 @@ RUN_PARCELS:
         status_dir: '/home/thopri/BLZ-SURGE/config/'
 
 #Clean up worker configuration
-CLEAN_UP:
+clean:
+      up:
     #location of model run directory
-        run_dir: /SRC/NEMOGCM/CONFIG/TEST/EXP00/
+        run_dir: /home/thopri/BLZ-SURGE/RUN_NEMO/
     #location of log files
-        log_dir: /SRC/logging/
+        forcing_dir: /home/thopri/BLZ-SURGE/netcdf/
     #location of output files
-        out_dir: /SRC/output/
-    #location of status file
-        status_dir: /SRC/status/
+        out_dir: /home/thopri/BLZ-SURGE/OUTPUTS/
     #name of model configuration
-        config_name: Mad-Surge
+        config_name: BLZ-SURGE
     #location of restart files
-        restart_dir: /SRC/NEMOGCM/CONFIG/TEST/EXP00/Restart_files/
+        restart_dir: /home/thopri/BLZ-SURGE/RUN_NEMO/Restart_files/
     #Runtime model files to delete after successful run
         del_1: layout.dat
         del_2: namelist_cfg
@@ -250,13 +249,17 @@ CLEAN_UP:
         del_4: output.namelist.dyn
         del_5: solver.stat
         del_6: time.step
-    #number of days to keep log and output files
+    #number of days to keep output files
         num_days: 1
-    #logging sub directories for both model and worker logs
-        log_1: model_logs/
-        log_2: worker_logs/
-    #location of circus (process manager) log file
-        circus_log: nowcast/circus.log
+    # number of days to keep container logs
+        log_days: 7
+    #sub directories for forcing files to trim
+        sub_1: GFS/
+        sub_2: MBLZ/
+    #sub directories for log files to trim
+        log_dir: /home/thopri/BLZ-SURGE/logs/
+    # Sargassium dir to trim
+        sargassium_dir: /home/thopri/BLZ-SURGE/sargassium/
     #subdirectories for processed model output
         out_1: csv/
         out_2: netcdf/

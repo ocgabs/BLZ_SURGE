@@ -55,7 +55,7 @@ def main(config_loc=''):
     ctimes = 0
     for file in list_of_files:
         ctime = os.path.getctime(file)
-        if start - ctime <= POLL/1000:
+        if start - ctime <= (POLL/1000*1.5):
             ctimes = ctimes + 1
     if ctimes >= 3:
         print('new netcdf data found, running process forcing worker now....')
