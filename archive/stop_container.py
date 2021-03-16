@@ -23,19 +23,18 @@ from time import sleep
 import json
 
 def main(config_loc=''):
+    start = time.time()
     if config_loc == '':
         parser = ArgumentParser(description='stop container running that matches name in config file')
         parser.add_argument('config_location', help='location of YAML config file')
+        parser.add_argument('-f', '--force', action='store_true', help='force start of worker')
         args = parser.parse_args()
+        if args.force == True:
+            print('force flag enabled, running worker now....')
         config = read_yaml(args.config_location)
     else:
         config = read_yaml(config_loc)
 
-    with open(config['status_dir'] + 'worker_status.json', 'r') as fp:
-        status = json.load(fp)
-    if status['STOP_CONTAINER'] == False:
-        print('NEMO not finished or not running, going back to sleep for '+ str(config['POLL_INTERVAL']/60000) + ' minutes')
-    if status['STOP_CONTAINER'] == True:
 
         print('NEMO finished, going to check the container stopped.....')
 
@@ -66,12 +65,6 @@ def main(config_loc=''):
 
         except IndexError:
             print('no containers running, all is well')
-
-        status['STOP_CONTAINER'] = False
-        status['CLEAN_UP'] = True
-        with open(config['status_dir'] + 'worker_status.json', 'w') as fp:
-            json.dump(status, fp)
-        print('Stop container Worker Complete, going to sleep for ' + str(config['POLL_INTERVAL']/60000) + ' minutes')
 
     return 0
 

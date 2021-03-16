@@ -33,22 +33,35 @@ from argparse import ArgumentParser
 import yaml
 from time import sleep
 import json
+import glob
+import time
 
 #main function to run the NEMO model
 def main(config_loc=''):
+    start = time.time()
     if config_loc == '':
         parser = ArgumentParser(description='RUN NEMO worker')
         parser.add_argument('config_location', help='location of YAML config file')
+        parser.add_argument('eco_location', help='location of ecosystem file')
+        parser.add_argument('-f', '--force', action='store_true', help='force start of worker')
         args = parser.parse_args()
+        if args.force == True:
+            print('force flag enabled, running worker now....')
         config = read_yaml(args.config_location)
     else:
         config = read_yaml(config_loc)
-    with open(config['status_dir'] + 'worker_status.json', 'r') as fp:
-        status = json.load(fp)
-    if status['RUN_NEMO'] == False:
-        print('No new data, going back to sleep for '+ str(config['POLL_INTERVAL']/60000) + ' minutes')
-    if status['RUN_NEMO'] == True:
-        print('New forcing data.... running NEMO now')
+    POLL = eco_poll(args.eco_location,'run_nemo')
+    list_of_files = glob.glob(config['netcdf_dir'] + '*')  # * means all if need specific format then *.csv
+    ctimes = 0
+    for file in list_of_files:
+        ctime = os.path.getctime(file)
+        if start - ctime <= POLL/1000:
+            ctimes = ctimes + 1
+    if ctimes >= 3:
+        print('new netcdf data found, running process forcing worker now....')
+        args.force = True
+
+    if args.force == True:
         #get start date in specified format
         start_ymd = arrow.now().format('YYYY-MM-DD-HH')
         delete = delete_old_fluxes(config) #remove old flux boundary files
@@ -81,11 +94,10 @@ def main(config_loc=''):
         #start the model
         start_nemo(config)
         checklist = {f'{start_ymd} started nemo model'}
-        status['RUN_NEMO'] = False
-        status['WATCH_NEMO'] = True
-        with open(config['status_dir'] + 'worker_status.json', 'w') as fp:
-            json.dump(status, fp)
-        print('Run Worker Complete, going to sleep for ' + str(config['POLL_INTERVAL']/60000) + ' minutes')
+
+    else:
+        print('no new forcing data found, going back to sleep for '+str(POLL/60000)+' minutes')
+
 
     return 0
 
@@ -99,6 +111,18 @@ def read_yaml(YAML_loc):
         config_file = yaml.safe_load(f)
     config = config_file['RUN_NEMO']
     return config
+
+def eco_poll(YAML_loc,worker_name):
+    # safe load YAML file, if file is not present raise exception
+    if not os.path.isfile(YAML_loc):
+        print('DONT PANIC: The yaml file specified does not exist')
+        return 1
+    with open(YAML_loc) as f:
+        eco_file = yaml.safe_load(f)
+    for eco in eco_file['apps']:
+        if eco['name'] == worker_name:
+            eco_poll = eco['restart_delay']
+    return eco_poll
 
 #Function to move weighted NETCDF files to flux folder
 def move_weight_files(config):

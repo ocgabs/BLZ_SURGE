@@ -45,24 +45,38 @@ import yaml
 from argparse import ArgumentParser
 import json
 from time import sleep
+import glob
 
 #Process Forcing function to convert the hourly GRIB files into combined NETCDF file for each variable
 def main(config_loc=''):
+    start = time.time()
     if config_loc == '':
         parser = ArgumentParser(description='RUN NEMO worker')
         parser.add_argument('config_location', help='location of YAML config file')
+        parser.add_argument('-f', '--force', action='store_true', help='force start of worker')
         args = parser.parse_args()
+        if args.force == True:
+            print('force flag enabled, running worker now....')
         config = read_yaml(args.config_location)
     else:
         config = read_yaml(config_loc)
+    POLL = eco_poll(args.eco_location,'process_forcing')
     ymd = arrow.now().format('YYYY-MM-DD') #Get current data in given format
 
-    with open(config['forcing']['process']['config_dir'] + 'worker_status.json', 'r') as fp:
-        status = json.load(fp)
-    if status['PROCESS_FORCING'] == False:
-        print('No new files to process, going to sleep for '+str(config['forcing']['process']['POLL_INTERVAL']/60000)+' minutes')
-    if status['PROCESS_FORCING'] == True:
-        print('Process Worker needs to be run, running now.....')
+    list_of_files = glob.glob(config['forcing']['process']['grib_dir']+'*')  # * means all if need specific format then *.csv
+    if len(list_of_files) != config['forcing']['process']['forecast_hrs']:
+        print('there are no enough GRIB files to cover forecast hours, program terminating')
+        sys.exit(1)
+    ctimes = 0
+    for file in list_of_files:
+        ctime = os.path.getctime(file)
+        if start-ctime <= POLL/1000:
+            ctimes = ctimes + 1
+    if ctimes == config['forcing']['process']['forecast_hrs']:
+        print('new grib data found, running process forcing worker now....')
+        args.force = True
+
+    if args.force == True:
         dir = dir_gen(config) #get directory values from YAML file
         model_run = ModelRun(dir) #Calculate the model run hour by finding the latest GRIB download
         arg = arg_gen(config, model_run)#get command arguments from YAML file
@@ -81,13 +95,11 @@ def main(config_loc=''):
         C = 2
         createNetCDF(lats, lons, dir, C, arg)
         loaddataNetCDF(config, arg, dir, model_run, t, i, C)
-
+        print('GRIB files successfully processed')
         checklist = {f'{ymd} forcing': "Files successfully processed"}
-        status['PROCESS_FORCING'] = False
-        status['RUN_NEMO'] = True
-        with open(config['forcing']['process']['config_dir'] + 'worker_status.json', 'w') as fp:
-            json.dump(status, fp)
 
+    else:
+        print('no new data found, going back to sleep for '+str(POLL/60000)+' minutes')
     return 0
 
 '''Read in config file with all parameters required'''
@@ -99,6 +111,18 @@ def read_yaml(YAML_loc):
     with open(YAML_loc) as f:
         config = yaml.safe_load(f)
     return config
+
+def eco_poll(YAML_loc,worker_name):
+    # safe load YAML file, if file is not present raise exception
+    if not os.path.isfile(YAML_loc):
+        print('DONT PANIC: The yaml file specified does not exist')
+        return 1
+    with open(YAML_loc) as f:
+        eco_file = yaml.safe_load(f)
+    for eco in eco_file['apps']:
+        if eco['name'] == worker_name:
+            eco_poll = eco['restart_delay']
+    return eco_poll
 
 #Function to calculate the number of hours since 1900 for a given model run
 #This is used convert the UTC time of the GRIB forecast data into time understood by the NEMO model.

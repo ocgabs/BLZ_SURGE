@@ -32,65 +32,56 @@ def main(config_loc=''):
         config = read_yaml(args.config_location)
     else:
         config = read_yaml(config_loc)
-    with open(config['weather']['download']['status_dir'] + 'worker_status.json', 'r') as fp:
-        status = json.load(fp)
-    if status['DOWNLOAD_WEATHER'] == False:
-        print('Flag set to false in worker status file, to enable download worker set to true')
-        print('Download Weather Worker Complete, going to sleep for '+str(config['weather']['download']['POLL_INTERVAL']/3600000)+' hours')
-    if status['DOWNLOAD_WEATHER'] == True:
-        print('Download Weather Worker enabled, running now.....')
-        #Load inital variables
-        ymd = arrow.now().format('YYYY-MM-DD') #generate Todays date in specified format
-        day_now = UtcNow() # creates the current time and date in the form of a dictionary
-        model_run = Model_run() #Identify which model run to use, i.e. latest one
-        arg = arg_gen(config, day_now, model_run) #generate arguments to use in functions these are loaded from YAML file
-        t = ForeCast(arg) #Generate forecast file numbers (hourly in specific format)
-        E = 0 #Initial error code number
-        ## Check that the forecast files exist
-        for i in range(int(arg["forecast_hrs"])): #For each of the forecast hours requested
-            GRIB = HTTP_HEAD(config, arg, model_run, t, i) #Do a http head request to check date file exists
-            if GRIB != 200: #If returned code is anyhting other than 200 (200 shows file is present)
-                E = 1 #Change error code to 1
-                return E
-            print(str(i+1)+' of '+str(int(arg["forecast_hrs"]))+' forecast files present')
-        #If E = 0 then all files are present and then a http request for the data can be made
-        if E == 0:
-            print('all files present, downloading them now....')
-            for i in range(int(arg["forecast_hrs"])):
-                DL = HTTP_req(config, arg, model_run, t, i) #Request and download all data
-                print(str(i + 1) + ' of ' + str(int(arg["forecast_hrs"])) + ' forecast files downloaded')
-                if type(DL) == int:
-                    E = 3 #Set error code to 3
-                    return E
-            #Create checklist to be written to checklist YAML file
-            checklist = {f'{ymd} forecast': "Current Model Run Downloaded"}
-
-        #If E is 1 then the IF statement catching HTTP error codes has activated
-        if E == 1:
-            day_now = UtcMinus24() #Get new day dictionary for 6 hours previous
-            model_run = ModelMinus24() #Get new model run parameters i.e. previous one
-            arg = arg_gen(config, day_now, model_run) #Regenerate arguments (Not sure if needed)
-            for i in range(int(arg["forecast_hrs"])):
-                GRIB = HTTP_HEAD(config, arg, model_run, t, i) #Http Head request for previous model run
-                if GRIB != 200: #If the return code is not 200 (showing file is present) then
-                    E = 3 #Set error code to 3
-                    return E
-                print(str(i + 1) + ' of ' + str(int(arg["forecast_hrs"])) + ' forecast files present')
-        #If E is still 1 then previous model data is present
-        if E == 1:
-            for i in range(int(arg["forecast_hrs"])):
-                DL = HTTP_req(config, arg, model_run, t, i)  #Request and download data
-                print(str(i + 1) + ' of ' + str(int(arg["forecast_hrs"])) + ' forecast files downloaded')
-                if type(DL) == int:
-                    E = 3 #Set error code to 3
-                    return E
-        if E == 3: #If E = 3 then both the current and previous model runs are not present (or URL template is incorrect)
-            print('Error code 3')
+    POLL = eco_poll(args.eco_location, 'download_weather')
+    #Load inital variables
+    ymd = arrow.now().format('YYYY-MM-DD') #generate Todays date in specified format
+    day_now = UtcNow() # creates the current time and date in the form of a dictionary
+    model_run = Model_run() #Identify which model run to use, i.e. latest one
+    arg = arg_gen(config, day_now, model_run) #generate arguments to use in functions these are loaded from YAML file
+    t = ForeCast(arg) #Generate forecast file numbers (hourly in specific format)
+    E = 0 #Initial error code number
+    ## Check that the forecast files exist
+    for i in range(int(arg["forecast_hrs"])): #For each of the forecast hours requested
+        GRIB = HTTP_HEAD(config, arg, model_run, t, i) #Do a http head request to check date file exists
+        if GRIB != 200: #If returned code is anyhting other than 200 (200 shows file is present)
+            E = 1 #Change error code to 1
             return E
-        status['PROCESS_FORCING'] = True
-        with open(config['forcing']['process']['config_dir'] + 'worker_status.json', 'w') as fp:
-            json.dump(status, fp)
-        print('worker ran successfully, sleeping for '+str(arg['POLL_INTERVAL']/3600000)+' hours....')
+        print(str(i+1)+' of '+str(int(arg["forecast_hrs"]))+' forecast files present')
+    #If E = 0 then all files are present and then a http request for the data can be made
+    if E == 0:
+        print('all files present, downloading them now....')
+        for i in range(int(arg["forecast_hrs"])):
+            DL = HTTP_req(config, arg, model_run, t, i) #Request and download all data
+            print(str(i + 1) + ' of ' + str(int(arg["forecast_hrs"])) + ' forecast files downloaded')
+            if type(DL) == int:
+                E = 3 #Set error code to 3
+                return E
+        #Create checklist to be written to checklist YAML file
+        checklist = {f'{ymd} forecast': "Current Model Run Downloaded"}
+
+    #If E is 1 then the IF statement catching HTTP error codes has activated
+    if E == 1:
+        day_now = UtcMinus24() #Get new day dictionary for 6 hours previous
+        model_run = ModelMinus24() #Get new model run parameters i.e. previous one
+        arg = arg_gen(config, day_now, model_run) #Regenerate arguments (Not sure if needed)
+        for i in range(int(arg["forecast_hrs"])):
+            GRIB = HTTP_HEAD(config, arg, model_run, t, i) #Http Head request for previous model run
+            if GRIB != 200: #If the return code is not 200 (showing file is present) then
+                E = 3 #Set error code to 3
+                return E
+            print(str(i + 1) + ' of ' + str(int(arg["forecast_hrs"])) + ' forecast files present')
+    #If E is still 1 then previous model data is present
+    if E == 1:
+        for i in range(int(arg["forecast_hrs"])):
+            DL = HTTP_req(config, arg, model_run, t, i)  #Request and download data
+            print(str(i + 1) + ' of ' + str(int(arg["forecast_hrs"])) + ' forecast files downloaded')
+            if type(DL) == int:
+                E = 3 #Set error code to 3
+                return E
+    if E == 3: #If E = 3 then both the current and previous model runs are not present (or URL template is incorrect)
+        print('Error code 3')
+        return E
+    print('worker ran successfully, sleeping for '+str(POLL/3600000)+' hours....')
     return 0
 
 '''Read in config file with all parameters required'''
@@ -102,6 +93,18 @@ def read_yaml(YAML_loc):
     with open(YAML_loc) as f:
         config = yaml.safe_load(f)
     return config
+
+def eco_poll(YAML_loc,worker_name):
+    # safe load YAML file, if file is not present raise exception
+    if not os.path.isfile(YAML_loc):
+        print('DONT PANIC: The yaml file specified does not exist')
+        return 1
+    with open(YAML_loc) as f:
+        eco_file = yaml.safe_load(f)
+    for eco in eco_file['apps']:
+        if eco['name'] == worker_name:
+            eco_poll = eco['restart_delay']
+    return eco_poll
 
 #Function to make HTTP HEAD requests to GFS server to check GRIB data files are present (often the latest run is only partially present)
 def HTTP_HEAD(config, arg, model_run, t, i):
@@ -165,8 +168,7 @@ def arg_gen(config, day_now, model_run):
         'model_run' : model_run,
         'file_name' : 'gfs.t'+model_run+'z.pgrb2.0p25.f',
         'hours' : '{hours}',
-        'dest_dir' : config['weather']['download']['dest_dir'],
-        'POLL_INTERVAL' : config['weather']['download']['POLL_INTERVAL']
+        'dest_dir' : config['weather']['download']['dest_dir']
         }
     return arguments
 #Function to calculate the current year, month, day and hour in UTC time

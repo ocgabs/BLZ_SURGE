@@ -1,8 +1,5 @@
 # System configuration file for Nowcast system
 
-INIT:
-        status_dir: /home/thopri/BLZ-SURGE/config/
-
 # TODO put paths into one section and migrate to one work dir string
 #PATHS:
 #      work_dir: /home/thopri/BLZ-SURGE
@@ -15,6 +12,9 @@ INIT:
 #      namelist_cont_dir: /namelist
 #      weights_cont_dir: /weights
 #      container_log: /logs
+#MODEL:
+#      container_name:
+
 
 #Download Weather worker configuration
 weather:
@@ -46,7 +46,6 @@ weather:
         forecast_hrs: 120
     # Destination directory for downloaded GFS model GRIB data files
         dest_dir: '/home/thopri/BLZ-SURGE/grib/'
-        POLL_INTERVAL: 86400000 #miliseconds
         status_dir: /home/thopri/BLZ-SURGE/config/
 
 #Forcing process worker configuration
@@ -79,7 +78,6 @@ forcing:
     #Config name NOTE: do NOT use - in the name as it will break parsing of file names
         netcdf_name: BLZ-SURGE
         config_dir: /home/thopri/BLZ-SURGE/config/
-        POLL_INTERVAL: 600000 # milliseconds
 
 #Generate Boundary worker configuration
 generate:
@@ -147,7 +145,6 @@ RUN_NEMO:
   # where to save container terminal output in log file
         container_log: /home/thopri/BLZ-SURGE/logs/
         status_dir: /home/thopri/BLZ-SURGE/config/
-        POLL_INTERVAL: 600000 #miliseconds
 
 #Watch NEMO worker configuration
 WATCH_NEMO:
@@ -162,7 +159,6 @@ WATCH_NEMO:
     # name of container to watch
         container_name: docker.io/thopri/nemo-surge:8814
         status_dir: /home/thopri/BLZ-SURGE/config/
-        POLL_INTERVAL: 600000 #miliseconds
         WATCH_INTERVAL: 1 # minutes
 
 #Make Plots NEMO worker configuration
@@ -220,30 +216,21 @@ seed:
     # string to parse correct image, i.e. unique part of filename
         parse_ID: 'DENSITY.png'
         status_dir: /home/thopri/BLZ-SURGE/config/
-        POLL_INTERVAL: 86400000 #miliseconds
 
 RUN_PARCELS:
-        POLL_INTERVAL: 600000 #miliseconds
         lon_csv: '/home/thopri/BLZ-SURGE/sargassium/ilon.csv'
         lat_csv: '/home/thopri/BLZ-SURGE/sargassium/ilat.csv'
-        data_path: '/home/thopri/BLZ-SURGE/INPUTS/'
+        data_path: '/home/thopri/BLZ-SURGE/RUN_NEMO/'
         ufile_parse: 'BLZ-SURGE_1h_*U.nc'
         vfile_parse: 'BLZ-SURGE_1h_*V.nc'
+        file_parse:  'BLZ-SURGE_1h_*.nc'
         grid_file: '/home/thopri/BLZ-SURGE/INPUTS/BLZE12_coordinates.nc'
         out_file: 'nBelize_nemo_sargaso_particlesT2'
         out_dir: '/home/thopri/BLZ-SURGE/RUN_PARCELS/'
         status_dir: '/home/thopri/BLZ-SURGE/config/'
 
-STOP_CONTAINER:
-    # name of container to stop
-        container_name: docker.io/thopri/nemo-surge:8814
-        status_dir: /home/thopri/BLZ-SURGE/config/
-        POLL_INTERVAL: 600000 #miliseconds
-
-
 #Clean up worker configuration
-clean:
-  up:
+CLEAN_UP:
     #location of model run directory
         run_dir: /SRC/NEMOGCM/CONFIG/TEST/EXP00/
     #location of log files

@@ -46,17 +46,32 @@ def main(config_loc=''):
     if config_loc == '':
         parser = ArgumentParser(description='Process GRIB files')
         parser.add_argument('config_location', help='location of YAML config file')
+        parser.add_argument('-f', '--force', action='store_true', help='force start of worker')
         args = parser.parse_args()
+        if args.force == True:
+            print('force flag enabled, running worker now....')
         config = read_yaml(args.config_location)
     else:
         config = read_yaml(config_loc)
-    with open(config['status_dir'] + 'worker_status.json', 'r') as fp:
-        status = json.load(fp)
-    if status['WATCH_NEMO'] == False:
-        print('NEMO not running, going back to sleep for '+ str(config['POLL_INTERVAL']/60000) + ' minutes')
-    if status['WATCH_NEMO'] == True:
+    POLL = eco_poll(args.eco_location,'watch_nemo')
+    if args.force == False:
+        print('seeing if surge container is running....')
+        container = Popen(['docker', 'ps'], stdout=PIPE, stderr=PIPE)
+        stdout, stderr = container.communicate()
+        stdout = stdout.decode('utf-8')
+        container = stdout.split('\n')
+        container = container[1].split(' ')
+        container = [x for x in container if x]
+        try:
+            container = container[1]
+            if container == config['container_name']:
+                print('NEMO surge container running, going to watch it now......')
+            args.force = True
+        except IndexError:
+            print('NEMO surge container not running, going to sleep for '+str(POLL/60000)+' minutes')
 
-        print('NEMO running, going to watch it.....')
+    if args.force == True:
+        print('checking NEMO progress.....')
         ymd = arrow.now().format('YYYY-MM-DD') #get the current date in the specified format
         sim_length = length_simulation(config) #calculate length of simulation in time steps
         time_step = start_t_step(config)
@@ -90,7 +105,6 @@ def main(config_loc=''):
                 run_succeeded = _confirm_run_success(config, sim_length)
                 if not run_succeeded:
                     print('Run Failed')
-                    status['WATCH_NEMO'] = False
                 return 1
             print('Container ID: '+str(container_ID))
             container_name = container[1]
@@ -101,7 +115,6 @@ def main(config_loc=''):
                 run_succeeded = _confirm_run_success(config, sim_length)
                 if not run_succeeded:
                     print('Run Failed')
-                    status['WATCH_NEMO'] = False
                 return 2
 
             time.sleep(config['WATCH_INTERVAL']*60)
@@ -115,12 +128,42 @@ def main(config_loc=''):
                 'completed': run_succeeded,
             }
         }
-        status['WATCH_NEMO'] = False
-        status['STOP_CONTAINER'] = True
-        with open(config['status_dir'] + 'worker_status.json', 'w') as fp:
-            json.dump(status, fp)
-        print('Watch Worker Complete, going to sleep for ' + str(config['POLL_INTERVAL']/60000) + ' minutes')
+        print('NEMO watching finished, checking container has stopped....')
+        print('giving container time to stop on its own, sleeping for 5 mins...')
+        time.sleep(300)
+        print('waking up.... going to check the container stopped.....')
 
+        container = Popen(['docker', 'ps'], stdout=PIPE, stderr=PIPE)
+        stdout, stderr = container.communicate()
+        stdout = stdout.decode('utf-8')
+        container = stdout.split('\n')
+        container = container[1].split(' ')
+        container = [x for x in container if x]
+        try:
+            container_ID = container[0]
+            container_name = container[1]
+
+            if container_name == config['container_name']:
+                print('container still running, going to stop it now check stdout and stderr below.')
+                stop_container = Popen(['docker', 'stop', container_ID], stdout=PIPE, stderr=PIPE)
+                stdout, stderr = stop_container.communicate()
+                stdout = stdout.decode('utf-8')
+                stderr = stderr.decode('utf-8')
+                print(stderr)
+                print(stdout)
+                print('Watch Worker Complete, going to sleep for ' + str(POLL/ 60000) + ' minutes')
+                return 1
+
+            if container_name != config['container_name']:
+                print(container_name)
+                print('valid container not found, maybe different container is running? check container name above with config file...')
+                print('Watch Worker Complete, going to sleep for ' + str(POLL/ 60000) + ' minutes')
+                return 2
+
+        except IndexError:
+            print('no containers running, all is well')
+
+        print('Watch Worker Complete, going to sleep for ' + str(POLL/60000) + ' minutes')
     return 0
 
 '''Read in config file with all parameters required'''
@@ -133,6 +176,18 @@ def read_yaml(YAML_loc):
         config_file = yaml.safe_load(f)
     config = config_file['WATCH_NEMO']
     return config
+
+def eco_poll(YAML_loc,worker_name):
+    # safe load YAML file, if file is not present raise exception
+    if not os.path.isfile(YAML_loc):
+        print('DONT PANIC: The yaml file specified does not exist')
+        return 1
+    with open(YAML_loc) as f:
+        eco_file = yaml.safe_load(f)
+    for eco in eco_file['apps']:
+        if eco['name'] == worker_name:
+            eco_poll = eco['restart_delay']
+    return eco_poll
 
 #calculate length of simulation in time steps
 def length_simulation(config):

@@ -39,151 +39,141 @@ def main(config_loc=''):
         config = read_yaml(args.config_location)
     else:
         config = read_yaml(config_loc)
-    with open(config['seed']['parcels']['status_dir'] + 'worker_status.json', 'r') as fp:
-        status = json.load(fp)
-    if status['GET_SARGASSIUM'] == False:
-        print('Flag set to false in worker status file, to enable worker set to true')
-        print('Get Sargassium Worker Complete, going to sleep for '+str(config['seed']['parcels']['POLL_INTERVAL']/3600000)+' hours')
-    if status['GET_SARGASSIUM'] == True:
-        print('Get Sargassium Worker enabled, running now.....')
-        day_now = UtcNow()
-        # Download Sargassium product and return filename of downloaded product
-        get_sar = get_sargassium(config,day_now)# creates the current time and date in the form of a dictionary
-        if type(get_sar) == int:
-            print('Error Code: '+str(get_sar))
-            print('get sargassium product failed, refer to error code printed above')
-            return 'get_sar error'
-        if type(get_sar) != str:
-            print(type(get_sar))
-            print('unexpected return from getting sargassium product expected string')
-            return 'get_sar_error'
-        # Download the file
+    POLL = eco_poll(args.eco_location,'get_sargassium')
+    day_now = UtcNow()
+    # Download Sargassium product and return filename of downloaded product
+    get_sar = get_sargassium(config,day_now)# creates the current time and date in the form of a dictionary
+    if type(get_sar) == int:
+        print('Error Code: '+str(get_sar))
+        print('get sargassium product failed, refer to error code printed above')
+        return 'get_sar error'
+    if type(get_sar) != str:
+        print(type(get_sar))
+        print('unexpected return from getting sargassium product expected string')
+        return 'get_sar_error'
+    # Download the file
 
-        trans_sar = transform_sargassium(config,get_sar)
-        if trans_sar != 0:
-            print('Error Code: '+str(trans_sar))
-            print('transformation of sargassium product failed, program terminating...')
-            return 'transform_sar error'
-        if type(trans_sar) != int:
-            print(type(trans_sar))
-            print('unexpected return from transforming sargassium product, expected int')
-            return 'transform_sar error'
+    trans_sar = transform_sargassium(config,get_sar)
+    if trans_sar != 0:
+        print('Error Code: '+str(trans_sar))
+        print('transformation of sargassium product failed, program terminating...')
+        return 'transform_sar error'
+    if type(trans_sar) != int:
+        print(type(trans_sar))
+        print('unexpected return from transforming sargassium product, expected int')
+        return 'transform_sar error'
 
-        data = rasterio.open(config['seed']['parcels']['dest_dir']+config['seed']['parcels']['tiff_name'])
-        sband = data.read(1)
+    data = rasterio.open(config['seed']['parcels']['dest_dir']+config['seed']['parcels']['tiff_name'])
+    sband = data.read(1)
 
-        #Rasterio plotting only works for raterio.open (ed) data
-        if config['seed']['parcels']['plot'] == True:
-            show((data,1), cmap='terrain')
-            data.nodatavals
+    #Rasterio plotting only works for raterio.open (ed) data
+    if config['seed']['parcels']['plot'] == True:
+        show((data,1), cmap='terrain')
+        data.nodatavals
 
-        #To check that the transform looks correct!
-        #Return the west, south, east, north bounds of an array given its height, width, and an affine
-        #rasterio.transform.array_bounds(band1.shape[0], band1.shape[1], transforma3)
-        #Return the bounds of an array given height, width, and a transform.
-        #(-90.0, 15.875, -80.85714285714286, 22.0
+    #To check that the transform looks correct!
+    #Return the west, south, east, north bounds of an array given its height, width, and an affine
+    #rasterio.transform.array_bounds(band1.shape[0], band1.shape[1], transforma3)
+    #Return the bounds of an array given height, width, and a transform.
+    #(-90.0, 15.875, -80.85714285714286, 22.0
 
-        #data.xy(data.width, data.height) #This gives min -81.99 better than above -80.85
-        if config['seed']['parcels']['plot'] == True:
-            # Read the geoTiff as xarray (LET ME SEE THE DATA!!!)
-            da = xr.open_rasterio(config['seed']['parcels']['dest_dir']+config['seed']['parcels']['tiff_name'])
-            da.head()
-            #print(da.x)
+    #data.xy(data.width, data.height) #This gives min -81.99 better than above -80.85
+    if config['seed']['parcels']['plot'] == True:
+        # Read the geoTiff as xarray (LET ME SEE THE DATA!!!)
+        da = xr.open_rasterio(config['seed']['parcels']['dest_dir']+config['seed']['parcels']['tiff_name'])
+        da.head()
+        #print(da.x)
 
-            # Rough Plot on a map (*not proper lon/lat projection), got an error installing cartopy
-            #no idea how to put a colorbar with the rasterio ploting function...
-            fig, ax0 = plt.subplots(nrows=1,figsize=(10, 6))
-            im=ax0.pcolormesh(da.x, da.y,sband)
-            fig.colorbar(im, ax=ax0)
-            plt.show()
-            np.unique(sband)
+        # Rough Plot on a map (*not proper lon/lat projection), got an error installing cartopy
+        #no idea how to put a colorbar with the rasterio ploting function...
+        fig, ax0 = plt.subplots(nrows=1,figsize=(10, 6))
+        im=ax0.pcolormesh(da.x, da.y,sband)
+        fig.colorbar(im, ax=ax0)
+        plt.show()
+        np.unique(sband)
 
-        #FIND pixels with sargassum
-        spx,spy =np.where((sband <252) & (sband>0))
-        spx.size
-        #will be good to read more about the product to know what the different values mean!
+    #FIND pixels with sargassum
+    spx,spy =np.where((sband <252) & (sband>0))
+    spx.size
+    #will be good to read more about the product to know what the different values mean!
 
-        #Get locations with Sargasso
-        #Acumuladores
-        slo= np.array([])
-        sla= np.array([])
-        # Loop through your list of coords
-        for i in range(0,spx.size):
-            # Get pixel coordinates from map coordinates
-            lo, la = data.xy(spx[i], spy[i])
-            slo=np.append(slo,lo)
-            sla=np.append(sla,la)
-            #print('Pixel Y, X coords: {}, {}'.format(py, px))
+    #Get locations with Sargasso
+    #Acumuladores
+    slo= np.array([])
+    sla= np.array([])
+    # Loop through your list of coords
+    for i in range(0,spx.size):
+        # Get pixel coordinates from map coordinates
+        lo, la = data.xy(spx[i], spy[i])
+        slo=np.append(slo,lo)
+        sla=np.append(sla,la)
+        #print('Pixel Y, X coords: {}, {}'.format(py, px))
 
-        #Make a shapley multipoint with the sargasso locations
-        spoints = geom.MultiPoint((np.array([slo, sla]).T).tolist())
+    #Make a shapley multipoint with the sargasso locations
+    spoints = geom.MultiPoint((np.array([slo, sla]).T).tolist())
 
-        len(spoints)
+    len(spoints)
 
-        #Read in NEMO grid
-        bathy = config['seed']['parcels']['bathy_meter']
-        bat = nc.Dataset(bathy)
-        lat = bat['nav_lat'][:]
-        lon = bat['nav_lon'][:]
-        h = bat['Bathymetry'][:]
+    #Read in NEMO grid
+    bathy = config['seed']['parcels']['bathy_meter']
+    bat = nc.Dataset(bathy)
+    lat = bat['nav_lat'][:]
+    lon = bat['nav_lon'][:]
+    h = bat['Bathymetry'][:]
 
 
-        if config['seed']['parcels']['plot'] == True:
-            # Rough Plot on a map (*not proper lon/lat projection)
-            fig, ax0 = plt.subplots(nrows=1)
-            im=ax0.pcolormesh(lon, lat,h)
-            fig.colorbar(im, ax=ax0)
-            plt.show()
-            bat.close()
+    if config['seed']['parcels']['plot'] == True:
+        # Rough Plot on a map (*not proper lon/lat projection)
+        fig, ax0 = plt.subplots(nrows=1)
+        im=ax0.pcolormesh(lon, lat,h)
+        fig.colorbar(im, ax=ax0)
+        plt.show()
+        bat.close()
 
-        #Find lola of model domain perimeter
-        lon=np.array(lon)
-        lat=np.array(lat)
-        plo=np.concatenate((lon[:,0],lon[-1,:],np.flipud(lon[:,-1]),np.flipud(lon[0,:])), axis=0)
-        pla=np.concatenate((lat[:,0],lat[-1,:],np.flipud(lat[:,-1]),np.flipud(lat[0,:])), axis=0)
+    #Find lola of model domain perimeter
+    lon=np.array(lon)
+    lat=np.array(lat)
+    plo=np.concatenate((lon[:,0],lon[-1,:],np.flipud(lon[:,-1]),np.flipud(lon[0,:])), axis=0)
+    pla=np.concatenate((lat[:,0],lat[-1,:],np.flipud(lat[:,-1]),np.flipud(lat[0,:])), axis=0)
 
-        #Needs to be a shaply polygon to intersect them with the locations with Sargasso
-        #To get it into shaply format:
-        # give plo and pla an extra empty dimension
-        plo = plo[:, np.newaxis]
-        pla = pla[:, np.newaxis]
+    #Needs to be a shaply polygon to intersect them with the locations with Sargasso
+    #To get it into shaply format:
+    # give plo and pla an extra empty dimension
+    plo = plo[:, np.newaxis]
+    pla = pla[:, np.newaxis]
 
-        # combine x y arrays into a two dimensional sequence of coordinates
-        coord = np.append(plo, pla, axis=1)
+    # combine x y arrays into a two dimensional sequence of coordinates
+    coord = np.append(plo, pla, axis=1)
 
-        # make a shapley polygon
-        nbox = geom.Polygon(coord)
+    # make a shapley polygon
+    nbox = geom.Polygon(coord)
 
-        # Now find the locations (slo, sla) with Sargaso inside the NEMO domain (nbox)
-        sloc_range = np.zeros(slo.size, dtype=bool)
-        for i in range(slo.size):
-          sloc_range[i] = nbox.contains(spoints[i])
+    # Now find the locations (slo, sla) with Sargaso inside the NEMO domain (nbox)
+    sloc_range = np.zeros(slo.size, dtype=bool)
+    for i in range(slo.size):
+      sloc_range[i] = nbox.contains(spoints[i])
 
-        if config['seed']['parcels']['plot'] == True:
-            # plotting!
-            fig, (ax1) = plt.subplots(nrows=1)
+    if config['seed']['parcels']['plot'] == True:
+        # plotting!
+        fig, (ax1) = plt.subplots(nrows=1)
 
-            ax1.plot(slo[sloc_range], sla[sloc_range], '.r', ms=10, zorder=3)
-            patch = PolygonPatch(nbox, facecolor='k', alpha=0.5, zorder=1)
-            ax1.add_patch(patch)
-            ax1.plot(slo, sla, '.b', ms=10, zorder=2)
+        ax1.plot(slo[sloc_range], sla[sloc_range], '.r', ms=10, zorder=3)
+        patch = PolygonPatch(nbox, facecolor='k', alpha=0.5, zorder=1)
+        ax1.add_patch(patch)
+        ax1.plot(slo, sla, '.b', ms=10, zorder=2)
 
-        sum(sloc_range)
-        slo[sloc_range]
-        sla[sloc_range]
+    sum(sloc_range)
+    slo[sloc_range]
+    sla[sloc_range]
 
-        ilon = slo[sloc_range]
-        ilat = sla[sloc_range]
+    ilon = slo[sloc_range]
+    ilat = sla[sloc_range]
 
-        np.savetxt(config['seed']['parcels']['dest_dir']+'ilon.csv',ilon,delimiter=',')
-        np.savetxt(config['seed']['parcels']['dest_dir'] + 'ilat.csv', ilat,delimiter=',')
+    np.savetxt(config['seed']['parcels']['dest_dir']+'ilon.csv',ilon,delimiter=',')
+    np.savetxt(config['seed']['parcels']['dest_dir'] + 'ilat.csv', ilat,delimiter=',')
 
-        print('The End')
-        status['GET_SARGASSIUM'] = False
-        status['RUN_PARCELS'] = True
-        with open(config['seed']['parcels']['status_dir'] + 'worker_status.json', 'w') as fp:
-            json.dump(status, fp)
-        print('worker ran successfully, sleeping for '+str(config['seed']['parcels']['POLL_INTERVAL']/3600000)+' hours....')
+    print('The End')
+    print('worker ran successfully, sleeping for '+str(POLL/3600000)+' hours....')
     return 0
 
 '''Read in config file with all parameters required'''
@@ -195,6 +185,18 @@ def read_yaml(YAML_loc):
     with open(YAML_loc) as f:
         config = yaml.safe_load(f)
     return config
+
+def eco_poll(YAML_loc,worker_name):
+    # safe load YAML file, if file is not present raise exception
+    if not os.path.isfile(YAML_loc):
+        print('DONT PANIC: The yaml file specified does not exist')
+        return 1
+    with open(YAML_loc) as f:
+        eco_file = yaml.safe_load(f)
+    for eco in eco_file['apps']:
+        if eco['name'] == worker_name:
+            eco_poll = eco['restart_delay']
+    return eco_poll
 
 #Function to calculate the current year, month, day and hour in UTC time
 def UtcNow():

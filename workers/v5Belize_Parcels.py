@@ -16,15 +16,22 @@ def main(config_loc=''):
         parser = ArgumentParser(description='RUN PARCELS worker')
         parser.add_argument('config_location', help='location of YAML config file')
         args = parser.parse_args()
+        parser.add_argument('-f', '--force', action='store_true', help='force start of worker')
         config = read_yaml(args.config_location)
     else:
         config = read_yaml(config_loc)
-    with open(config['status_dir'] + 'worker_status.json', 'r') as fp:
-        status = json.load(fp)
-    if status['RUN_PARCELS'] == False:
-        print('No new data, going back to sleep for '+ str(config['POLL_INTERVAL']/60000) + ' minutes')
-    if status['RUN_PARCELS'] == True:
-        print('New forcing data.... running PARCELS now')
+    POLL = eco_poll(args.eco_location,'run_parcels')
+    list_of_files = glob(config['data_path'] + config['file_parse'])  # * means all if need specific format then *.csv
+    ctimes = 0
+    for file in list_of_files:
+        ctime = os.path.getctime(file)
+        if start - ctime <= POLL/1000:
+            ctimes = ctimes + 1
+    if ctimes >= 3:
+        print('new netcdf data found, running process forcing worker now....')
+        args.force = True
+
+    if args.force == True:
         from parcels import ErrorCode, FieldSet, ParticleSet, ScipyParticle, JITParticle, AdvectionRK4, ParticleFile
         with open(config['lon_csv']) as csvfile:
             file1 = csv.reader(csvfile, delimiter=',')
@@ -92,13 +99,12 @@ def main(config_loc=''):
         #pset.show(field=field_set.U)
         #pset.show(field=fieldset.U, show_time=datetime(2002, 1, 10, 2))
         #pset.show(field=fieldset.U, show_time=datetime(2002, 1, 10, 2), with_particles=False)
-        status['RUN_PARCELS'] = False
-        status['CLEAN_UP'] = True
-        with open(config['status_dir'] + 'worker_status.json', 'w') as fp:
-            json.dump(status, fp)
-        print('RUN PARCELS worker Complete, going to sleep for ' + str(config['POLL_INTERVAL']/60000) + ' minutes')
+        print('RUN PARCELS worker Complete, going to sleep for ' + str(POLL/60000) + ' minutes')
         end = time.time()
         print(end-start)
+
+    else:
+        print('no new data sleeping for '+ str(POLL/60000) + ' minutes')
     return 0
 
 '''Read in config file with all parameters required'''
@@ -111,6 +117,18 @@ def read_yaml(YAML_loc):
         config_file = yaml.safe_load(f)
     config = config_file['RUN_PARCELS']
     return config
+
+def eco_poll(YAML_loc,worker_name):
+    # safe load YAML file, if file is not present raise exception
+    if not os.path.isfile(YAML_loc):
+        print('DONT PANIC: The yaml file specified does not exist')
+        return 1
+    with open(YAML_loc) as f:
+        eco_file = yaml.safe_load(f)
+    for eco in eco_file['apps']:
+        if eco['name'] == worker_name:
+            eco_poll = eco['restart_delay']
+    return eco_poll
 
 if __name__ == '__main__':
     main()  # pragma: no cover
