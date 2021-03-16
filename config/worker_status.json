@@ -1,9 +1,1 @@
-{ "DOWNLOAD_WEATHER": false,
-  "PROCESS_FORCING": false,
-  "RUN_NEMO": false,
-  "WATCH_NEMO": false,
-  "STOP_CONTAINER": false,
-  "GET_SARGASSIUM": false,
-  "RUN_PARCELS": false,
-  "CLEAN_UP": false
-}
+{"DOWNLOAD_WEATHER": false, "PROCESS_FORCING": false, "RUN_NEMO": false, "WATCH_NEMO": false, "STOP_CONTAINER": false, "GET_SARGASSIUM": false, "RUN_PARCELS": false, "CLEAN_UP": true}

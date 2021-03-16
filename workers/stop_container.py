@@ -45,26 +45,28 @@ def main(config_loc=''):
         container = stdout.split('\n')
         container = container[1].split(' ')
         container = [x for x in container if x]
-        container_ID = container[0]
-        if len(container_ID) == 0:
+        try:
+            container_ID = container[0]
+            container_name = container[1]
+
+            if container_name == config['container_name']:
+                print('container still running, going to stop it now check stdout and stderr below.')
+                stop_container = Popen(['docker', 'stop', container_ID], stdout=PIPE, stderr=PIPE)
+                stdout, stderr = stop_container.communicate()
+                stdout = stdout.decode('utf-8')
+                stderr = stderr.decode('utf-8')
+                print(stderr)
+                print(stdout)
+                return 1
+
+            if container_name != config['container_name']:
+                print(container_name)
+                print('valid container not found, check container name above with config file...')
+                return 2
+
+        except IndexError:
             print('no containers running, all is well')
-            return 0
-        container_name = container[1]
 
-        if container_name == config['container_name']:
-            print('container still running, going to stop it now check stdout and stderr below.')
-            stop_container = Popen(['docker', 'stop', container_ID], stdout=PIPE, stderr=PIPE)
-            stdout, stderr = stop_container.communicate()
-            stdout = stdout.decode('utf-8')
-            stderr = stderr.decode('utf-8')
-            print(stderr)
-            print(stdout)
-            return 1
-
-        if container_name != config['container_name']:
-            print(container_name)
-            print('valid container not found, check container name above with config file...')
-            return 2
         status['STOP_CONTAINER'] = False
         status['CLEAN_UP'] = True
         with open(config['status_dir'] + 'worker_status.json', 'w') as fp:
