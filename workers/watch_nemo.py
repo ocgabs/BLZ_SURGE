@@ -54,6 +54,10 @@ def main(config_loc=''):
         config = read_yaml(args.config_location)
     else:
         config = read_yaml(config_loc)
+        code = exit_code(config, 'run_nemo')
+        if code != '0':
+            print('previous worker did not run successfully, terminating program.....')
+            sys.exit(1)
     POLL = eco_poll(args.eco_location,'watch_nemo')
     if args.force == False:
         print('seeing if surge container is running....')
@@ -70,6 +74,10 @@ def main(config_loc=''):
             args.force = True
         except IndexError:
             print('NEMO surge container not running, going to sleep for '+str(POLL/60000)+' minutes')
+            sys.exit(2)
+            if container != config['container_name']:
+                print('container running but is not NEMO surge, program terminating.')
+                sys.exit(3)
 
     if args.force == True:
         print('checking NEMO progress.....')
@@ -165,7 +173,8 @@ def main(config_loc=''):
             print('no containers running, all is well')
 
         print('Watch Worker Complete, going to sleep for ' + str(POLL/60000) + ' minutes')
-    return 0
+        sys.exit(0)
+
 
 '''Read in config file with all parameters required'''
 def read_yaml(YAML_loc):
@@ -189,6 +198,19 @@ def eco_poll(YAML_loc,worker_name):
         if eco['name'] == worker_name:
             eco_poll = eco['restart_delay']
     return eco_poll
+
+def exit_code(config,worker):
+    with open(config['pm2log'], 'r') as f:
+        lines = f.read().splitlines()
+    for line in range(len(lines),0,-1):
+        last_line = lines[line-1]
+        if worker in last_line and 'exited with code' in last_line:
+            last_line = last_line.split(' ')
+            code = last_line[8]
+            code = code[1]
+            return code
+
+    return -1
 
 #calculate length of simulation in time steps
 def length_simulation(config):

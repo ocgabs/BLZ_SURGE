@@ -23,6 +23,7 @@ from argparse import ArgumentParser
 import yaml
 import os
 import json
+import sys
 
 def main(config_loc=''):
     if config_loc == '':
@@ -83,7 +84,7 @@ def main(config_loc=''):
         print('Error code 3')
         return E
     print('worker ran successfully, sleeping for '+str(POLL/3600000)+' hours....')
-    return 0
+    sys.exit(0)
 
 '''Read in config file with all parameters required'''
 def read_yaml(YAML_loc):

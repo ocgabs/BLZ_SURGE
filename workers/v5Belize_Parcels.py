@@ -10,9 +10,11 @@ import csv
 import os
 import yaml
 import json
+import sys
 
 def main(config_loc=''):
     if config_loc == '':
+        start = time.time()
         parser = ArgumentParser(description='RUN PARCELS worker')
         parser.add_argument('config_location', help='location of YAML config file')
         parser.add_argument('eco_location', help='location of ecosystem file')
@@ -22,14 +24,18 @@ def main(config_loc=''):
         config = read_yaml(args.config_location)
     else:
         config = read_yaml(config_loc)
+    code = exit_code(config,'get_sargassium')
+    if code != '0':
+        print('previous worker did not run successfully, terminating program.....')
+        sys.exit(1)
     POLL = eco_poll(args.eco_location,'run_parcels')
     list_of_files = glob(config['data_path'] + config['file_parse'])  # * means all if need specific format then *.csv
-    ctimes = 0
+    mtimes = 0
     for file in list_of_files:
-        ctime = os.path.getctime(file)
-        if start - ctime <= (POLL/1000*1.5):
-            ctimes = ctimes + 1
-    if ctimes >= 3:
+        mtime = os.path.getmtime(file)
+        if start - mtime <= (POLL/1000*1.25):
+            mtimes = mtimes + 1
+    if mtimes >= 3:
         print('new netcdf data found, running process forcing worker now....')
         args.force = True
 
@@ -104,10 +110,10 @@ def main(config_loc=''):
         print('RUN PARCELS worker Complete, going to sleep for ' + str(POLL/60000) + ' minutes')
         end = time.time()
         print(end-start)
-
+        sys.exit(0)
     else:
         print('no new data sleeping for '+ str(POLL/60000) + ' minutes')
-    return 0
+        sys.exit(2)
 
 '''Read in config file with all parameters required'''
 def read_yaml(YAML_loc):
@@ -131,6 +137,19 @@ def eco_poll(YAML_loc,worker_name):
         if eco['name'] == worker_name:
             eco_poll = eco['restart_delay']
     return eco_poll
+
+def exit_code(config,worker):
+    with open(config['pm2log'], 'r') as f:
+        lines = f.read().splitlines()
+    for line in range(len(lines),0,-1):
+        last_line = lines[line-1]
+        if worker in last_line and 'exited with code' in last_line:
+            last_line = last_line.split(' ')
+            code = last_line[8]
+            code = code[1]
+            return code
+
+    return -1
 
 if __name__ == '__main__':
     main()  # pragma: no cover

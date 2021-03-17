@@ -61,6 +61,10 @@ def main(config_loc=''):
         config = read_yaml(args.config_location)
     else:
         config = read_yaml(config_loc)
+    code = exit_code(config,'download_weather')
+    if code != '0':
+        print('previous worker did not run successfully terminating program.....')
+        sys.exit(1)
     POLL = eco_poll(args.eco_location,'process_forcing')
     ymd = arrow.now().format('YYYY-MM-DD') #Get current data in given format
 
@@ -68,12 +72,12 @@ def main(config_loc=''):
     if len(list_of_files) != config['forcing']['process']['forecast_hrs']:
         print('there are no enough GRIB files to cover forecast hours, program terminating')
         sys.exit(1)
-    ctimes = 0
+    mtimes = 0
     for file in list_of_files:
-        ctime = os.path.getctime(file)
-        if start-ctime <= (POLL/1000*1.5):
-            ctimes = ctimes + 1
-    if ctimes == config['forcing']['process']['forecast_hrs']:
+        mtime = os.path.getmtime(file)
+        if start-mtime <= (POLL/1000*1.25):
+            mtimes = mtimes + 1
+    if mtimes == config['forcing']['process']['forecast_hrs']:
         print('new grib data found, running process forcing worker now....')
         args.force = True
 
@@ -98,10 +102,10 @@ def main(config_loc=''):
         loaddataNetCDF(config, arg, dir, model_run, t, i, C)
         print('GRIB files successfully processed')
         checklist = {f'{ymd} forcing': "Files successfully processed"}
-
+        sys.exit(0)
     else:
         print('no new data found, going back to sleep for '+str(POLL/60000)+' minutes')
-    return 0
+        sys.exit(1)
 
 '''Read in config file with all parameters required'''
 def read_yaml(YAML_loc):
@@ -124,6 +128,21 @@ def eco_poll(YAML_loc,worker_name):
         if eco['name'] == worker_name:
             eco_poll = eco['restart_delay']
     return eco_poll
+
+def exit_code(config,worker):
+    with open(config['forcing']['process']['pm2log'], 'r') as f:
+        lines = f.read().splitlines()
+    for line in range(len(lines),0,-1):
+        last_line = lines[line-1]
+        if worker in last_line and 'exited with code' in last_line:
+            last_line = last_line.split(' ')
+            code = last_line[8]
+            code = code[1]
+            return code
+
+    return -1
+
+
 
 #Function to calculate the number of hours since 1900 for a given model run
 #This is used convert the UTC time of the GRIB forecast data into time understood by the NEMO model.
@@ -162,7 +181,7 @@ def arg_gen(config, model_run):
         'var3_des' : config['forcing']['process']['var3_des'],
         'file_template' : config['forcing']['process']['file_template'],
         'model_run' : model_run,
-        'hours' : '{hours}',
+        'hours' : '{hours}'
         }   
     return arguments
 #Generate command arguments from YAML file for directory locations

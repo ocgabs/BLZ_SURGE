@@ -50,14 +50,18 @@ def main(config_loc=''):
         config = read_yaml(args.config_location)
     else:
         config = read_yaml(config_loc)
+    code = exit_code(config,'process_forcing')
+    if code != '0':
+        print('previous worker did not run successfully, terminating program.....')
+        sys.exit(1)
     POLL = eco_poll(args.eco_location,'run_nemo')
     list_of_files = glob.glob(config['netcdf_dir'] + '*')  # * means all if need specific format then *.csv
-    ctimes = 0
+    mtimes = 0
     for file in list_of_files:
-        ctime = os.path.getctime(file)
-        if start - ctime <= (POLL/1000*1.5):
-            ctimes = ctimes + 1
-    if ctimes >= 3:
+        mtime = os.path.getmtime(file)
+        if start - mtime <= (POLL/1000*1.25):
+            mtimes = mtimes + 1
+    if mtimes >= 3:
         print('new netcdf data found, running process forcing worker now....')
         args.force = True
 
@@ -94,12 +98,13 @@ def main(config_loc=''):
         #start the model
         start_nemo(config)
         checklist = {f'{start_ymd} started nemo model'}
+        sys.exit(0)
 
     else:
         print('no new forcing data found, going back to sleep for '+str(POLL/60000)+' minutes')
+        sys.exit(2)
 
 
-    return 0
 
 '''Read in config file with all parameters required'''
 def read_yaml(YAML_loc):
@@ -123,6 +128,19 @@ def eco_poll(YAML_loc,worker_name):
         if eco['name'] == worker_name:
             eco_poll = eco['restart_delay']
     return eco_poll
+
+def exit_code(config,worker):
+    with open(config['pm2log'], 'r') as f:
+        lines = f.read().splitlines()
+    for line in range(len(lines),0,-1):
+        last_line = lines[line-1]
+        if worker in last_line and 'exited with code' in last_line:
+            last_line = last_line.split(' ')
+            code = last_line[8]
+            code = code[1]
+            return code
+
+    return -1
 
 #Function to move weighted NETCDF files to flux folder
 def move_weight_files(config):

@@ -54,6 +54,6 @@ apps:
     cwd: '/home/thopri/BLZ-SURGE'
     args: '-- config/nowcast.yaml config/ecosystem.yml'
     watch: false
-    restart_delay: 600000
+    restart_delay: 86400000
     log_date_format: 'YYYY-MM-DD HH:mm:ss.SSS'
 

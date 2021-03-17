@@ -13,8 +13,7 @@
 #      weights_cont_dir: /weights
 #      container_log: /logs
 #MODEL:
-#      container_name:
-
+#      container_name
 
 #Download Weather worker configuration
 weather:
@@ -78,6 +77,7 @@ forcing:
     #Config name NOTE: do NOT use - in the name as it will break parsing of file names
         netcdf_name: BLZ-SURGE
         config_dir: /home/thopri/BLZ-SURGE/config/
+        pm2log: /home/thopri/.pm2/pm2.log
 
 #Generate Boundary worker configuration
 generate:
@@ -145,6 +145,7 @@ RUN_NEMO:
   # where to save container terminal output in log file
         container_log: /home/thopri/BLZ-SURGE/logs/
         status_dir: /home/thopri/BLZ-SURGE/config/
+        pm2log: /home/thopri/.pm2/pm2.log
 
 #Watch NEMO worker configuration
 WATCH_NEMO:
@@ -160,6 +161,7 @@ WATCH_NEMO:
         container_name: docker.io/thopri/nemo-surge:8814
         status_dir: /home/thopri/BLZ-SURGE/config/
         WATCH_INTERVAL: 1 # minutes
+        pm2log: /home/thopri/.pm2/pm2.log
 
 #Make Plots NEMO worker configuration
 make:
@@ -220,7 +222,7 @@ seed:
 RUN_PARCELS:
         lon_csv: '/home/thopri/BLZ-SURGE/sargassium/ilon.csv'
         lat_csv: '/home/thopri/BLZ-SURGE/sargassium/ilat.csv'
-        data_path: '/home/thopri/BLZ-SURGE/RUN_NEMO/'
+        data_path: '/home/thopri/BLZ-SURGE/OUTPUTS/netcdf/'
         ufile_parse: 'BLZ-SURGE_1h_*U.nc'
         vfile_parse: 'BLZ-SURGE_1h_*V.nc'
         file_parse:  'BLZ-SURGE_1h_*.nc'
@@ -228,6 +230,7 @@ RUN_PARCELS:
         out_file: 'nBelize_nemo_sargaso_particlesT2'
         out_dir: '/home/thopri/BLZ-SURGE/RUN_PARCELS/'
         status_dir: '/home/thopri/BLZ-SURGE/config/'
+        pm2log: /home/thopri/.pm2/pm2.log
 
 #Clean up worker configuration
 clean:
