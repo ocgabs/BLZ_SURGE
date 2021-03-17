@@ -39,6 +39,8 @@ import yaml
 from subprocess import Popen,PIPE
 import json
 from time import sleep
+from glob import glob
+import shutil
 
 #function to watch nemo model it reads the time step file every min, once the time step reaches
 #its expected final value it checks the run output to see if the model run was successful.
@@ -171,6 +173,16 @@ def main(config_loc=''):
 
         except IndexError:
             print('no containers running, all is well')
+        print('moving output files to output folder')
+        try:
+            list_of_files = glob(config['results_dir'] + config['file_parse'])
+            for file in list_of_files:
+                shutil.copy(file, config['output_dir'])
+            print('successfully copied '+str(len(list_of_files))+' files to output directory')
+            for file in list_of_files:
+                print(file)
+        except IOError:
+            print('IO error in moving netcdf output please check output directory')
 
         print('Watch Worker Complete, going to sleep for ' + str(POLL/60000) + ' minutes')
         sys.exit(0)
@@ -296,7 +308,6 @@ def _confirm_run_success(config, sim_length):
  #       run_succeeded = False
  #       logger.critical('Run failed; no restart/ directory')
     return run_succeeded
-
 
 if __name__ == '__main__':
     main()  #pragma: no cover

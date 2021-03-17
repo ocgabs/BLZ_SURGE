@@ -162,6 +162,8 @@ WATCH_NEMO:
         status_dir: /home/thopri/BLZ-SURGE/config/
         WATCH_INTERVAL: 1 # minutes
         pm2log: /home/thopri/.pm2/pm2.log
+        output_dir: /home/thopri/BLZ-SURGE/OUTPUTS/netcdf
+        file_parse:  'BLZ-SURGE_1h_*.nc'
 
 #Make Plots NEMO worker configuration
 make:
