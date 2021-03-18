@@ -1,121 +1,94 @@
-# BLZ_SURGE
-Belize surge model
+# BLZ_SURGE Operational Particle Tracking Model
+Operational Belize surge model with an open parcels post processing component.
 
+The readme describes how to use the BLZ-SURGE NEMO configuration and associated
+particle tracking modules within an operational framework. 
 
-This recipe describes how to build NEMO and XIOS appropriate for a surge model
-using Docker.
+Prerequisites
+=============
 
-Note the is a slight modification to the MY_SRC/diaharm_fast.F90 (line 68)
-relative to  surge configurations built on other machines (e.g. AMM7_SURGE on
-  ARCHER[1,2] https://doi.org/10.5281/zenodo.4022309).
-This is because of incompatability of compilers used across machines.
-Cray (e.g. ARCHER2):
-CHARACTER( LEN = 10 ), DIMENSION(5), PARAMETER :: m_varName2d = (/'ssh','u2d','v2d','ubfr','vbfr'/)
-GNU (here):
-CHARACTER( LEN = 10 ), DIMENSION(3), PARAMETER :: m_varName2d = (/'ssh','u2d','v2d'/)
+To use this framework the following prerequisites are required:
 
-This repository is based upon original work by Pierre Derian: 
-<contact@pierrederian.net> (https://github.com/pderian/NEMOGCM-Docker), Nikyle Nguyen <NLKNguyen@MSN.com> 
-(https://github.com/NLKNguyen/alpine-mpich), Simon Holgate: https://github.com/simonholgate/nemo-mpich <hello@simonholgate.org.uk> and thopri.
+- containerisation framework: docker or podman
+- python package manager: conda or pip
+- node package manager: NPM
 
+This system is only compatible with Linux, so far it has been tested on Fedora and Ubuntu.
 
-Prerequisites and path definitions
-=====================================
+System Setup
+=============
+The framework consists of three parts:
 
-Prerequisites to be placed in a INPUTS directory (see below)::
+- Containerised NEMO surge model config
+- Python workers to undertake different jobs (download weather etc)
+- Javascript process manager to run and monitor the python workers
 
-  * domain_cfg.nc
-  * BLZE12_bdytide_rotT_*.nc   (FES boundary tidal forcing)
-  * coordinates.bdy.nc (coordinates for FES boundary forcing)
+NEMO surge model
+-----------------
+The Belize model config has been built into a docker container, there are several dockerfile
+versions in the repository, but a suitable container has been built and is available on dockerhub.
+Please see supplementary info to build NEMO containers.
 
-Structure:
-The git repo contains BUILD_NEMO and RUN_NEMO. BUILD_NEMO contains the dockerfiles to build the two stages of the surge container. The first stage, BASE creates an container that contains all the libraries requried to run NEMO and XIOS e.g. MPICH, NETCDF, NetCDF FORTRAN etc. This acts as a primer for the surge container which takes the BASE container and builds NEMO and XIOS on top of it. 
+PM2 Process Manager
+-------------------
+PM2 is a production grade process manager that is primarily used to monitor JS apps. However, it
+is also good for monitoring python processes. The system is able to restart failed and finished 
+processes at a defined interval and also provides logging and monitoring tools. The monitoring 
+process is defined in a yaml ecosystem file located in the config directory.
 
-Once complete NEMO and XIOS are contained within the container and can be run using the docker run command and run_surge shell script that links the NEMO and XIOS executables along with INPUT data and runs the model saving output in a mounted folder that contains the NEMO model config files. An example is contained in RUN_NEMO. 
+Python workers
+--------------
+The actual work of running the model, collating data and running the particle tracking is undertaken
+by python scripts known as workers. These have the following allotted tasks:
 
-**Note**: the user does not need to build these containers, they can be pulled from the docker hub repository (see simple method).
+- download weather: (atmospheric forcing)
+- process forcing: (process forcing data to NEMO format)
+- generate boundary: (generate weighting files, only needed once)
+- run nemo: (set up and start NEMO surge container)
+- watch nemo: (monitor the running container and QA output when complete)
+- get sargassium: (get sargassium forecast product and create seed locations)
+- run parcels: (run openparcels module using NEMO output and seed locations to produce particle tracks)
+- clean up: (clean up NEMO directory, trim log files and remove old output files)
 
-The container can also be used interactively if prefered using the -it flag and calling bash as the container command. See Interactive Section.
+Workers have different behaviour depending on their type, e.g. download weather runs daily updating its
+data folder with new data. Whereas process forcing checks that download weather was successful and also 
+checks that the data is newer than its poll/restart interval. 
 
-The INPUTS directory is empty on cloning.  It needs to contain the forcing and
-domain files that are generated externally to this instruction set. These files
-are copied/linked into the `bdydta` folder in the experiment directory using the run_surge shell script.
+The workers are configured using a yaml file located in the config directory.
 
-First Steps
-===========
+To install operational framework:
+=================================
 
-Clone this repository
-========================
+clone the repo and switch to surge container branch:
+```commandline
+$ git clone https://github.com/ocgabs/BLZ_SURGE
+$ git checkout surge-container
+```
+build and activate the python environment:
+```commandline
+$ conda env create -f environment.yaml
+$ conda activate BLZ-SURGE
+```
+This will build the conda environment with all the dependencies required for the python
+workers. 
 
-Clone the repository ::
+Install the process manager PM2:
+```commandline
+$ npm install pm2:latest -g
+```
+The framework is now installed and ready to use. To start the framework the following command is required:
 
-  cd $HOME
-  git clone https://github.com/NOC-MSM/BLZ_SURGE.git BLZ_SURGE
+```commandline
+$ pm2 config/ecosystem.yml
+```
+To monitor the system it recommended to run the following in separate terminals:
 
-Copy the INPUTS in place. EDIT <INPUTS_SOURCE> appropriately::
+```commandline
+$ pm2 monit
+$ pm2 logs
+$ pm2 status
+```
+This will start an interactive dashboard (monit) with realtime logs for each process, a logging screen (logs)
+that shows all logs as they are generated, and finally the current status of all processes (status). 
 
-  rsync -uvt <INPUTS_SOURCE>/* $HOME/BLZ_SURGE/INPUTS/.
-
-Simple Method:
-=================
-
-The user can build the container from scratch if required but both the base container and surge container are availble on docker hub. To use, first install docker and then pull the container::
-  
-  docker pull thopri/nemo-surge:8814
-
-This will pull the container from the repository and install it locally. This means all the user really needs is the RUN_NEMO directory from the cloned repo. Assuming the Prerequisite input data is in the INPUTS directory the model can be run with the following command::
-
-  docker run --rm -v /path/to/repo/RUN_NEMO/EXP_tideonly:/BLZ_SURGE thopri/nemo-surge:8814
-
-The --rm flag removes container once finished, -v mounts the defined folder to the container. As no command is specified the container will run its default command which will run the shell script which links the executables and runs the model. 
-
-Interactive Method
-------------------
-
-While the container runs automatically the user can start the container and use the model interactively by running following command::
-
-  docker run --rm -it -v /path/to/repo/RUN_NEMO/EXP_tideonly:/BLZ_SURGE thopri/nemo-surge:8814 /bin/bash
-
-Note the extra flag -it which makes the container interactive and starts a tty. There is also the command /bin/bash after the container name. This starts the bash shell rather than running the surge shell script the container is expecting.
-
-After running this commmand, it will drop you in the mounted folder within the container. The user can then navigate the container as they wish. XIOS and NEMO are stored under /SRC directory. 
-
-Advanced Method:
-===================
-
-If the user wishes to build from scratch then the following process can be used. Navigate to the BUILD_NEMO directory and build the base container::
-
-  cd BUILD_NEMO
-  docker build -t thopri/nemo-base base/
-
-This tells docker that the base docker file is in the base folder and to tag (-t) the resulting container with the following name. It is important to build with this tag as the NEMO container built on top of base and it is expecting this tag. Once complete, (it takes awhile!) the NEMO container can be built as follows::
-
-  docker build -t thopri/nemo-surge:8814 surge/
-
-Once this completes then you have built your own NEMO surge model......
-
-Run NEMO
-===========
-
-This section details how to run the model interactively and how the run_surge shell script works.
-
-Link the NEMO exe and XIOS exe. ::
-  
-  cd /BLZ_SURGE
-  ln -s /SRC/NEMOGCM/CONFIG/BLZ_SURGE/BLD/bin/nemo.exe .
-  ln -s -f /SRC/XIOS/bin/xios_server.exe .
-
-Make a link between where the inputs files are and where the model expects them ::
-
-    cd /BLZ_SURGE/RUN_NEMO/EXP_tideonly
-    ln -s ../../INPUTS bdydta
-    ln -s ../../INPUTS/domain_cfg.nc .
-
-Now `EXP_tideonly/bdydta` should directly contain `BLZE12_bdytide_rotT_*.nc` and
-`coordinates.bdy.nc`
-::
-
-  cd /BLZ_SURGE/RUN_NEMO/EXP_tideonly/
-  mpirun -n 2 ./nemo.exe : -n 1 ./xios_server.exe
-
-NB the timestep, run length etc is not optimal, but it works!
+For information please see accompanying user manual.

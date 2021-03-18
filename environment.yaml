@@ -1,4 +1,4 @@
-name: BLZ_SURGE
+name: BLZ-SURGE
 channels:
   - conda-forge
   - defaults
