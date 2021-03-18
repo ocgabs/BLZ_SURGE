@@ -13,8 +13,8 @@ import json
 import sys
 
 def main(config_loc=''):
+    start = time.time()
     if config_loc == '':
-        start = time.time()
         parser = ArgumentParser(description='RUN PARCELS worker')
         parser.add_argument('config_location', help='location of YAML config file')
         parser.add_argument('eco_location', help='location of ecosystem file')
@@ -24,10 +24,11 @@ def main(config_loc=''):
         config = read_yaml(args.config_location)
     else:
         config = read_yaml(config_loc)
-    code = exit_code(config,'get_sargassium')
-    if code != '0':
-        print('previous worker did not run successfully, terminating program.....')
-        sys.exit(1)
+    code = exit_code(config,'find_seed')
+    if args.force == False:
+        if code != '0':
+            print('previous worker did not run successfully, terminating program.....')
+            sys.exit(1)
     POLL = eco_poll(args.eco_location,'run_parcels')
     list_of_files = glob(config['data_path'] + config['file_parse'])  # * means all if need specific format then *.csv
     mtimes = 0
@@ -60,7 +61,9 @@ def main(config_loc=''):
         # data_path = path.join(path.dirname(__file__), 'NemoCurvilinear_data/')
         data_path = config['data_path']
         ufiles = sorted(glob(data_path+config['ufile_parse']))
+        ufiles = ufiles[-1]
         vfiles = sorted(glob(data_path+config['vfile_parse']))
+        vfiles = vfiles[-1]
 
         grid_file = config['grid_file']
         filenames = {'U': {'lon': grid_file,

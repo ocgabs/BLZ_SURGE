@@ -33,12 +33,20 @@ apps:
     restart_delay   : 600000
     log_date_format : 'YYYY-MM-DD HH:mm:ss.SSS'
 
-  - script          : ./workers/rasteriogeoref.py
+  - script          : ./workers/get_sargassium.py
     name            : 'get_sargassium'
     cwd             : '/home/thopri/BLZ-SURGE'
     args            : '-- config/nowcast.yaml config/ecosystem.yml'
     watch           : false
     restart_delay   : 86400000
+    log_date_format : 'YYYY-MM-DD HH:mm:ss.SSS'
+
+  - script          : ./workers/find_seed.py
+    name            : 'find_seed'
+    cwd             : '/home/thopri/BLZ-SURGE'
+    args            : '-- config/nowcast.yaml config/ecosystem.yml'
+    watch           : false
+    restart_delay   : 600000
     log_date_format : 'YYYY-MM-DD HH:mm:ss.SSS'
 
   - script          : ./workers/v5Belize_Parcels.py

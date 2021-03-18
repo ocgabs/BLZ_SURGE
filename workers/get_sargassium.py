@@ -65,11 +65,11 @@ def main(config_loc=''):
         print('unexpected return from transforming sargassium product, expected int')
         return 'transform_sar error'
 
-    data = rasterio.open(config['seed']['parcels']['dest_dir']+config['seed']['parcels']['tiff_name'])
+    data = rasterio.open(config['dest_dir']+config['tiff_name'])
     sband = data.read(1)
 
     #Rasterio plotting only works for raterio.open (ed) data
-    if config['seed']['parcels']['plot'] == True:
+    if config['plot'] == True:
         show((data,1), cmap='terrain')
         data.nodatavals
 
@@ -80,9 +80,9 @@ def main(config_loc=''):
     #(-90.0, 15.875, -80.85714285714286, 22.0
 
     #data.xy(data.width, data.height) #This gives min -81.99 better than above -80.85
-    if config['seed']['parcels']['plot'] == True:
+    if config['plot'] == True:
         # Read the geoTiff as xarray (LET ME SEE THE DATA!!!)
-        da = xr.open_rasterio(config['seed']['parcels']['dest_dir']+config['seed']['parcels']['tiff_name'])
+        da = xr.open_rasterio(config['dest_dir']+config['tiff_name'])
         da.head()
         #print(da.x)
 
@@ -94,87 +94,7 @@ def main(config_loc=''):
         plt.show()
         np.unique(sband)
 
-    #FIND pixels with sargassum
-    spx,spy =np.where((sband <252) & (sband>0))
-    spx.size
-    #will be good to read more about the product to know what the different values mean!
 
-    #Get locations with Sargasso
-    #Acumuladores
-    slo= np.array([])
-    sla= np.array([])
-    # Loop through your list of coords
-    for i in range(0,spx.size):
-        # Get pixel coordinates from map coordinates
-        lo, la = data.xy(spx[i], spy[i])
-        slo=np.append(slo,lo)
-        sla=np.append(sla,la)
-        #print('Pixel Y, X coords: {}, {}'.format(py, px))
-
-    #Make a shapley multipoint with the sargasso locations
-    spoints = geom.MultiPoint((np.array([slo, sla]).T).tolist())
-
-    len(spoints)
-
-    #Read in NEMO grid
-    bathy = config['seed']['parcels']['bathy_meter']
-    bat = nc.Dataset(bathy)
-    lat = bat['nav_lat'][:]
-    lon = bat['nav_lon'][:]
-    h = bat['Bathymetry'][:]
-
-
-    if config['seed']['parcels']['plot'] == True:
-        # Rough Plot on a map (*not proper lon/lat projection)
-        fig, ax0 = plt.subplots(nrows=1)
-        im=ax0.pcolormesh(lon, lat,h)
-        fig.colorbar(im, ax=ax0)
-        plt.show()
-        bat.close()
-
-    #Find lola of model domain perimeter
-    lon=np.array(lon)
-    lat=np.array(lat)
-    plo=np.concatenate((lon[:,0],lon[-1,:],np.flipud(lon[:,-1]),np.flipud(lon[0,:])), axis=0)
-    pla=np.concatenate((lat[:,0],lat[-1,:],np.flipud(lat[:,-1]),np.flipud(lat[0,:])), axis=0)
-
-    #Needs to be a shaply polygon to intersect them with the locations with Sargasso
-    #To get it into shaply format:
-    # give plo and pla an extra empty dimension
-    plo = plo[:, np.newaxis]
-    pla = pla[:, np.newaxis]
-
-    # combine x y arrays into a two dimensional sequence of coordinates
-    coord = np.append(plo, pla, axis=1)
-
-    # make a shapley polygon
-    nbox = geom.Polygon(coord)
-
-    # Now find the locations (slo, sla) with Sargaso inside the NEMO domain (nbox)
-    sloc_range = np.zeros(slo.size, dtype=bool)
-    for i in range(slo.size):
-      sloc_range[i] = nbox.contains(spoints[i])
-
-    if config['seed']['parcels']['plot'] == True:
-        # plotting!
-        fig, (ax1) = plt.subplots(nrows=1)
-
-        ax1.plot(slo[sloc_range], sla[sloc_range], '.r', ms=10, zorder=3)
-        patch = PolygonPatch(nbox, facecolor='k', alpha=0.5, zorder=1)
-        ax1.add_patch(patch)
-        ax1.plot(slo, sla, '.b', ms=10, zorder=2)
-
-    sum(sloc_range)
-    slo[sloc_range]
-    sla[sloc_range]
-
-    ilon = slo[sloc_range]
-    ilat = sla[sloc_range]
-
-    np.savetxt(config['seed']['parcels']['dest_dir']+'ilon.csv',ilon,delimiter=',')
-    np.savetxt(config['seed']['parcels']['dest_dir'] + 'ilat.csv', ilat,delimiter=',')
-
-    print('The End')
     print('worker ran successfully, sleeping for '+str(POLL/3600000)+' hours....')
     sys.exit(0)
 
@@ -185,7 +105,8 @@ def read_yaml(YAML_loc):
         print('DONT PANIC: The yaml file specified does not exist')
         return 1
     with open(YAML_loc) as f:
-        config = yaml.safe_load(f)
+        config_file = yaml.safe_load(f)
+    config = config_file['GET_SAR']
     return config
 
 def eco_poll(YAML_loc,worker_name):
@@ -213,8 +134,8 @@ def UtcNow():
     return {'year': year, 'month': month, 'day': day, 'hour': hour, 'day_year': day_year, 'day_year_wk': day_year_wk}
 
 def get_sargassium(config,day_now):
-    url_template = config['seed']['parcels']['url_template']
-    parse_ID = config['seed']['parcels']['parse_ID']
+    url_template = config['url_template']
+    parse_ID = config['parse_ID']
     url = url_template.format(**day_now)
     r = requests.get(url)
     # TODO: will this work at start of year?
@@ -247,7 +168,7 @@ def get_sargassium(config,day_now):
     if r.status_code != 200:
         print('error in requesting sargassium image URL')
         return 4
-    file_name = config['seed']['parcels']["dest_dir"]+dataset_name
+    file_name = config["dest_dir"]+dataset_name
     try:
         with open(file_name, 'wb') as f:
             f.write(response.content)
@@ -263,14 +184,14 @@ def transform_sargassium(config,get_sar):
     band1 = dataset.read(1) #this is the actual data
 
     #crs needs to be created with this, or other CRS.method i.e. from_string, etc
-    crs=CRS.from_proj4(config['seed']['parcels']['crs'])
+    crs=CRS.from_proj4(config['crs'])
 
     #This transformation is what worked in the end to georeference
-    transforma3= rasterio.transform.from_bounds(config['seed']['parcels']['west'], config['seed']['parcels']['south'], config['seed']['parcels']['east'], config['seed']['parcels']['north'], dataset.shape[0], dataset.shape[1])
+    transforma3= rasterio.transform.from_bounds(config['west'], config['south'], config['east'], config['north'], dataset.shape[0], dataset.shape[1])
 
     #Georeferencing the image! savc it again as a geoTiff
     try:
-        with rasterio.open(config['seed']['parcels']['dest_dir']+config['seed']['parcels']['tiff_name'],'w',driver='GTiff',height=band1.shape[0],width=band1.shape[1],count=1, dtype='uint8',crs=crs,transform=transforma3,)as dst:
+        with rasterio.open(config['dest_dir']+config['tiff_name'],'w',driver='GTiff',height=band1.shape[0],width=band1.shape[1],count=1, dtype='uint8',crs=crs,transform=transforma3,)as dst:
             dst.write(band1, 1)
     except IOError:
         print('Unable to save transformed image.....')

@@ -46,7 +46,8 @@ by python scripts known as workers. These have the following allotted tasks:
 - generate boundary: (generate weighting files, only needed once)
 - run nemo: (set up and start NEMO surge container)
 - watch nemo: (monitor the running container and QA output when complete)
-- get sargassium: (get sargassium forecast product and create seed locations)
+- get sargassium: (get sargassium forecast product)
+- find seed: (find seed locations within sargassium product)
 - run parcels: (run openparcels module using NEMO output and seed locations to produce particle tracks)
 - clean up: (clean up NEMO directory, trim log files and remove old output files)
 

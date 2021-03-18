@@ -194,8 +194,7 @@ make:
         config_name: BLZ-SURGE
 
 #Seeding Open Parcels worker configuration
-seed:
-  parcels:
+GET_SAR:
     # URL
         url_template: 'https://optics.marine.usf.edu/subscription/modis/YUCATAN/{year}/comp/'
     # Produce plots? For QA and setup purposes.
@@ -220,6 +219,17 @@ seed:
     # string to parse correct image, i.e. unique part of filename
         parse_ID: 'DENSITY.png'
         status_dir: /home/thopri/BLZ-SURGE/config/
+
+FIND_SEEDS:
+      # name of GeoTiff image (processed from downloaded image)
+      tiff_name: 'SargassoT7.tif'
+      # directory to store downloaded product
+      dest_dir: '/home/thopri/BLZ-SURGE/sargassium/'
+      # Produce plots? For QA and setup purposes.
+      plot: False
+      bathy_meter: '/home/thopri/BLZ-SURGE/INPUTS/BLZE12_bathy_meter.nc'
+      file_parse:  'C*DENSITY.png'
+      pm2log: /home/thopri/.pm2/pm2.log
 
 RUN_PARCELS:
         lon_csv: '/home/thopri/BLZ-SURGE/sargassium/ilon.csv'
