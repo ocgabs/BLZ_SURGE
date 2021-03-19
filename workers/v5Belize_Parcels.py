@@ -37,7 +37,7 @@ def main(config_loc=''):
         if start - mtime <= (POLL/1000*1.25):
             mtimes = mtimes + 1
     if mtimes >= 3:
-        print('new netcdf data found, running process forcing worker now....')
+        print('new netcdf data found, running open parcels worker now....')
         args.force = True
 
     if args.force == True:
@@ -64,6 +64,13 @@ def main(config_loc=''):
         ufiles = ufiles[-1]
         vfiles = sorted(glob(data_path+config['vfile_parse']))
         vfiles = vfiles[-1]
+
+        start_date = ufiles.split('_')[2]
+        end_date = ufiles.split('_')[3]
+
+        if ufiles.split('_')[3] != vfiles.split('_')[3] and ufiles.split('_')[2] != vfiles.split('_')[2]:
+            print('error U and V files do not have same start and end dates.... terminating')
+            sys.exit(3)
 
         grid_file = config['grid_file']
         filenames = {'U': {'lon': grid_file,
@@ -92,7 +99,7 @@ def main(config_loc=''):
         #latp = [i for i in np.linspace(15.98, max(latE), npart)] #this makes a list!
 
         pset = ParticleSet.from_list(field_set, JITParticle, lon=LOS, lat=LAS)
-        pfile = ParticleFile(config['out_dir']+config['out_file'], pset, outputdt=delta(hours=0.5))
+        pfile = ParticleFile(config['out_dir']+config['out_file']+'_'+start_date+'_'+end_date+'.nc', pset, outputdt=delta(hours=0.5))
         kernels = pset.Kernel(AdvectionRK4)
         #Plot initial positions
         #pset.show()

@@ -240,9 +240,17 @@ RUN_PARCELS:
         file_parse:  'BLZ-SURGE_1h_*.nc'
         grid_file: '/home/thopri/BLZ-SURGE/INPUTS/BLZE12_coordinates.nc'
         out_file: 'nBelize_nemo_sargaso_particlesT2'
-        out_dir: '/home/thopri/BLZ-SURGE/RUN_PARCELS/'
+        out_dir: '/home/thopri/BLZ-SURGE/OUTPUTS/tracks/'
         status_dir: '/home/thopri/BLZ-SURGE/config/'
         pm2log: /home/thopri/.pm2/pm2.log
+
+PLOT_TRACKS:
+        pm2log: /home/thopri/.pm2/pm2.log
+        out_dir: '/home/thopri/BLZ-SURGE/OUTPUTS/plots/'
+        plot_name_template:
+        input_file_template: 'nBelize_nemo_sargaso_particlesT2.nc'
+        input_dir: '/home/thopri/BLZ-SURGE/OUTPUTS/tracks/'
+        num_particles: 500
 
 #Clean up worker configuration
 clean:
@@ -265,7 +273,7 @@ clean:
         del_5: solver.stat
         del_6: time.step
     #number of days to keep output files
-        num_days: 1
+        num_days: 7
     # number of days to keep container logs
         log_days: 7
     #sub directories for forcing files to trim
@@ -276,6 +284,6 @@ clean:
     # Sargassium dir to trim
         sargassium_dir: /home/thopri/BLZ-SURGE/sargassium/
     #subdirectories for processed model output
-        out_1: csv/
+        out_1: tracks/
         out_2: netcdf/
         out_3: plots/
