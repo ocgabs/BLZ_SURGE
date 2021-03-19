@@ -53,13 +53,14 @@ def main(config_loc=''):
     lats = nc_fid.variables['lat'][:]  # extract/copy the data
     lons = nc_fid.variables['lon'][:]
     time = nc_fid.variables['time'][:]
-    plt.figure(figsize=[15, 18])  # a new figure window
+    plt.figure(figsize=[15, 15])  # a new figure window
     ax = plt.subplot(111, projection=ccrs.PlateCarree())  # specify (nrows, ncols, axnum)
     minlon = np.min(lons)
     maxlon = np.max(lons)
     minlat = np.min(lats)
     maxlat = np.max(lats)
-    ax.set_extent([minlon, maxlon, minlat, maxlat], crs=ccrs.PlateCarree())  # set extent
+    ax.set_extent([minlon+config['set_extent_W'], maxlon+config['set_extent_E'],
+                   minlat+config['set_extent_S'], maxlat+config['set_extent_N']], crs=ccrs.PlateCarree())  # set extent
     ax.set_title('Forecast Particle Trajectories '+startdate+' to '+enddate, fontsize=20)  # set title
     ax.add_feature(cartopy.feature.LAND, zorder=0)  # add land polygon
     ax.add_feature(cartopy.feature.COASTLINE, zorder=10)  # add coastline polyline

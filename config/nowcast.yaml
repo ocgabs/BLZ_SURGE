@@ -251,7 +251,10 @@ PLOT_TRACKS:
         input_file_template: 'nBelize_nemo_sargaso_particlesT2.nc'
         input_dir: '/home/thopri/BLZ-SURGE/OUTPUTS/tracks/'
         num_particles: 500
-
+        set_extent_N: 0  #how much to increase extent over model domain by in degrees North
+        set_extent_S: -1 #how much to increase extent over model domain by in degrees South
+        set_extent_E: 0 #how much to increase extent over model domain by in degrees East
+        set_extent_W: -1 #how much to increase extent over model domain by in degrees West
 #Clean up worker configuration
 clean:
       up:
@@ -287,3 +290,4 @@ clean:
         out_1: tracks/
         out_2: netcdf/
         out_3: plots/
+        container_name: docker.io/thopri/nemo-surge:8814

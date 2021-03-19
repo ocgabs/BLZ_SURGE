@@ -134,6 +134,9 @@ def main(config_loc=''):
         print('The End')
         sys.exit(0)
 
+    else:
+        print('no new data, going to sleep for '+str(POLL/60000) + ' minutes')
+        sys.exit(2)
 
 '''Read in config file with all parameters required'''
 def read_yaml(YAML_loc):

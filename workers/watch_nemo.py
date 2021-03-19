@@ -123,10 +123,8 @@ def main(config_loc=''):
                 print('container no longer running stopping watch process....')
                 print('checking to see if model was successful....')
                 # check to if model run was successful
-                run_succeeded = _confirm_run_success(config, sim_length)
-                if not run_succeeded:
-                    print('Run Failed')
-                return 2
+                break
+
 
             time.sleep(config['WATCH_INTERVAL']*60)
         #check to if model run was successful
@@ -140,8 +138,8 @@ def main(config_loc=''):
             }
         }
         print('NEMO watching finished, checking container has stopped....')
-        print('giving container time to stop on its own, sleeping for 5 mins...')
-        time.sleep(300)
+        print('giving container time to stop on its own, sleeping for 1 mins...')
+        time.sleep(60)
         print('waking up.... going to check the container stopped.....')
 
         container = Popen(['docker', 'ps'], stdout=PIPE, stderr=PIPE)
