@@ -52,7 +52,6 @@ def main(config_loc=''):
         config = read_yaml(config_loc)
     code = exit_code(config,'process_forcing')
     if code != '0':
-        print('previous worker did not run successfully, terminating program.....')
         sys.exit(1)
     POLL = eco_poll(args.eco_location,'run_nemo')
     list_of_files = glob.glob(config['netcdf_dir'] + '*')  # * means all if need specific format then *.csv
@@ -62,7 +61,7 @@ def main(config_loc=''):
         if start - mtime <= (POLL/1000*1.25):
             mtimes = mtimes + 1
     if mtimes >= 3:
-        print('new netcdf data found, running process forcing worker now....')
+        print('new netcdf data found, running run NEMO worker now....')
         args.force = True
 
     if args.force == True:
@@ -97,11 +96,10 @@ def main(config_loc=''):
         #all the required parameters to run the model, (start and end date etc)
         #start the model
         start_nemo(config)
-        checklist = {f'{start_ymd} started nemo model'}
+        print('nemo model started')
         sys.exit(0)
 
     else:
-        print('no new forcing data found, going back to sleep for '+str(POLL/60000)+' minutes')
         sys.exit(2)
 
 

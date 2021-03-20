@@ -63,7 +63,6 @@ def main(config_loc=''):
         config = read_yaml(config_loc)
     code = exit_code(config,'download_weather')
     if code != '0':
-        print('previous worker did not run successfully terminating program.....')
         sys.exit(1)
     POLL = eco_poll(args.eco_location,'process_forcing')
     ymd = arrow.now().format('YYYY-MM-DD') #Get current data in given format
@@ -101,10 +100,8 @@ def main(config_loc=''):
         createNetCDF(lats, lons, dir, C, arg)
         loaddataNetCDF(config, arg, dir, model_run, t, i, C)
         print('GRIB files successfully processed')
-        checklist = {f'{ymd} forcing': "Files successfully processed"}
         sys.exit(0)
     else:
-        print('no new data found, going back to sleep for '+str(POLL/60000)+' minutes')
         sys.exit(1)
 
 '''Read in config file with all parameters required'''

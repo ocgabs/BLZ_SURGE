@@ -58,28 +58,12 @@ def main(config_loc=''):
         config = read_yaml(config_loc)
         code = exit_code(config, 'run_nemo')
         if code != '0':
-            print('previous worker did not run successfully, terminating program.....')
             sys.exit(1)
     POLL = eco_poll(args.eco_location,'watch_nemo')
     if args.force == False:
-        print('seeing if surge container is running....')
-        container = Popen(['docker', 'ps'], stdout=PIPE, stderr=PIPE)
-        stdout, stderr = container.communicate()
-        stdout = stdout.decode('utf-8')
-        container = stdout.split('\n')
-        container = container[1].split(' ')
-        container = [x for x in container if x]
-        try:
-            container = container[1]
-            if container == config['container_name']:
-                print('NEMO surge container running, going to watch it now......')
+        container = chk_container(config)
+        if container:
             args.force = True
-        except IndexError:
-            print('NEMO surge container not running, going to sleep for '+str(POLL/60000)+' minutes')
-            sys.exit(2)
-            if container != config['container_name']:
-                print('container running but is not NEMO surge, program terminating.')
-                sys.exit(3)
 
     if args.force == True:
         print('checking NEMO progress.....')
@@ -101,77 +85,16 @@ def main(config_loc=''):
                     f'{percent_done}% percent complete'
                 )
             print(msg)
-            container = Popen(['docker', 'ps'], stdout=PIPE, stderr=PIPE)
-            stdout, stderr = container.communicate()
-            stdout = stdout.decode('utf-8')
-            container = stdout.split('\n')
-            container = container[1].split(' ')
-            container =  [x for x in container if x]
-            try:
-                container_ID = container[0]
-            except IndexError:
-                print('no containers running, program terminating')
-                print('checking to see if model was successful....')
-                # check to if model run was successful
-                run_succeeded = _confirm_run_success(config, sim_length)
-                if not run_succeeded:
-                    print('Run Failed')
-                return 1
-            print('Container ID: '+str(container_ID))
-            container_name = container[1]
-            if container_name != config['container_name']:
-                print('container no longer running stopping watch process....')
-                print('checking to see if model was successful....')
-                # check to if model run was successful
-                break
-
+            container = chk_container(config)
+            if not container:
+                print('container not running, will see if run was successful')
 
             time.sleep(config['WATCH_INTERVAL']*60)
         #check to if model run was successful
         run_succeeded = _confirm_run_success(config, sim_length)
         if not run_succeeded:
             print('Run Failed')
-        checklist = {
-            'nowcast': {
-                'run date': ymd,
-                'completed': run_succeeded,
-            }
-        }
-        print('NEMO watching finished, checking container has stopped....')
-        print('giving container time to stop on its own, sleeping for 1 mins...')
-        time.sleep(60)
-        print('waking up.... going to check the container stopped.....')
 
-        container = Popen(['docker', 'ps'], stdout=PIPE, stderr=PIPE)
-        stdout, stderr = container.communicate()
-        stdout = stdout.decode('utf-8')
-        container = stdout.split('\n')
-        container = container[1].split(' ')
-        container = [x for x in container if x]
-        try:
-            container_ID = container[0]
-            container_name = container[1]
-
-            if container_name == config['container_name']:
-                print('container still running, going to stop it now check stdout and stderr below.')
-                stop_container = Popen(['docker', 'stop', container_ID], stdout=PIPE, stderr=PIPE)
-                stdout, stderr = stop_container.communicate()
-                stdout = stdout.decode('utf-8')
-                stderr = stderr.decode('utf-8')
-                print(stderr)
-                print(stdout)
-                print('Watch Worker Complete, going to sleep for ' + str(POLL/ 60000) + ' minutes')
-                return 1
-
-            if container_name != config['container_name']:
-                print(container_name)
-                print('valid container not found, maybe different container is running? check container name above with config file...')
-                print('Watch Worker Complete, going to sleep for ' + str(POLL/ 60000) + ' minutes')
-                return 2
-
-        except IndexError:
-            print('no containers running, all is well')
-        print('moving output files to output folder')
         try:
             list_of_files = glob(config['results_dir'] + config['file_parse'])
             for file in list_of_files:
@@ -306,6 +229,24 @@ def _confirm_run_success(config, sim_length):
  #       run_succeeded = False
  #       logger.critical('Run failed; no restart/ directory')
     return run_succeeded
+
+def chk_container(config):
+    cont = True
+    container = Popen(['docker', 'ps'], stdout=PIPE, stderr=PIPE)
+    stdout, stderr = container.communicate()
+    stdout = stdout.decode('utf-8')
+    container = stdout.split('\n')
+    container = container[1].split(' ')
+    container = [x for x in container if x]
+    try:
+        container_ID = container[0]
+        container_name = container[1]
+    except IndexError:
+        cont = False
+        return container
+    if container_name != config['container_name']:
+        cont = False
+    return cont
 
 if __name__ == '__main__':
     main()  #pragma: no cover

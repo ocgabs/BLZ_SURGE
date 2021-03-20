@@ -31,7 +31,6 @@ def main(config_loc=''):
         config = read_yaml(config_loc)
     code = exit_code(config,'get_sargassium')
     if code != '0':
-        print('previous worker did not run successfully, terminating program.....')
         sys.exit(1)
     POLL = eco_poll(args.eco_location,'find_seed')
     list_of_files = glob(config['dest_dir'] + config['file_parse'])  # * means all if need specific format then *.csv
@@ -135,7 +134,6 @@ def main(config_loc=''):
         sys.exit(0)
 
     else:
-        print('no new data, going to sleep for '+str(POLL/60000) + ' minutes')
         sys.exit(2)
 
 '''Read in config file with all parameters required'''

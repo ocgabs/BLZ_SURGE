@@ -27,7 +27,6 @@ def main(config_loc=''):
     code = exit_code(config,'find_seed')
     if args.force == False:
         if code != '0':
-            print('previous worker did not run successfully, terminating program.....')
             sys.exit(1)
     POLL = eco_poll(args.eco_location,'run_parcels')
     list_of_files = glob(config['data_path'] + config['file_parse'])  # * means all if need specific format then *.csv
@@ -122,7 +121,6 @@ def main(config_loc=''):
         print(end-start)
         sys.exit(0)
     else:
-        print('no new data sleeping for '+ str(POLL/60000) + ' minutes')
         sys.exit(2)
 
 '''Read in config file with all parameters required'''
