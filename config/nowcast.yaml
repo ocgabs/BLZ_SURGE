@@ -230,6 +230,7 @@ FIND_SEEDS:
       bathy_meter: '/home/thopri/BLZ-SURGE/INPUTS/BLZE12_bathy_meter.nc'
       file_parse:  'C*DENSITY.png'
       pm2log: /home/thopri/.pm2/pm2.log
+      status_dir: /home/thopri/BLZ-SURGE/config/
 
 RUN_PARCELS:
         lon_csv: '/home/thopri/BLZ-SURGE/sargassium/ilon.csv'

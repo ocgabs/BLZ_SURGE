@@ -46,8 +46,10 @@ def main(config_loc=''):
     for i in range(int(arg["forecast_hrs"])): #For each of the forecast hours requested
         GRIB = HTTP_HEAD(config, arg, model_run, t, i) #Do a http head request to check date file exists
         if GRIB != 200: #If returned code is anyhting other than 200 (200 shows file is present)
+            print('HTTP head req return code not 200 but '+str(GRIB))
+            print('trying previous day forecast')
             E = 1 #Change error code to 1
-            return E
+            break
         print(str(i+1)+' of '+str(int(arg["forecast_hrs"]))+' forecast files present')
     #If E = 0 then all files are present and then a http request for the data can be made
     if E == 0:
@@ -56,8 +58,9 @@ def main(config_loc=''):
             DL = HTTP_req(config, arg, model_run, t, i) #Request and download all data
             print(str(i + 1) + ' of ' + str(int(arg["forecast_hrs"])) + ' forecast files downloaded')
             if type(DL) == int:
+                print('Error in HTTP req: Error Code '+str(DL))
                 E = 3 #Set error code to 3
-                return E
+                break
         #Create checklist to be written to checklist YAML file
         checklist = {f'{ymd} forecast': "Current Model Run Downloaded"}
 
@@ -69,8 +72,10 @@ def main(config_loc=''):
         for i in range(int(arg["forecast_hrs"])):
             GRIB = HTTP_HEAD(config, arg, model_run, t, i) #Http Head request for previous model run
             if GRIB != 200: #If the return code is not 200 (showing file is present) then
-                E = 3 #Set error code to 3
-                return E
+                print('HTTP head req return code not 200 but ' + str(GRIB))
+                print('raising error code 3')
+                E = 3  # Change error code to 3
+                break
             print(str(i + 1) + ' of ' + str(int(arg["forecast_hrs"])) + ' forecast files present')
     #If E is still 1 then previous model data is present
     if E == 1:
@@ -78,11 +83,12 @@ def main(config_loc=''):
             DL = HTTP_req(config, arg, model_run, t, i)  #Request and download data
             print(str(i + 1) + ' of ' + str(int(arg["forecast_hrs"])) + ' forecast files downloaded')
             if type(DL) == int:
+                print('Error in HTTP req: Error Code '+str(DL))
                 E = 3 #Set error code to 3
-                return E
+                break
     if E == 3: #If E = 3 then both the current and previous model runs are not present (or URL template is incorrect)
         print('Error code 3')
-        return E
+        sys.exit(3)
     print('worker ran successfully, sleeping for '+str(POLL/3600000)+' hours....')
     sys.exit(0)
 

@@ -64,6 +64,8 @@ def main(config_loc=''):
         container = chk_container(config)
         if container:
             args.force = True
+        if not container:
+            sys.exit(2)
 
     if args.force == True:
         print('checking NEMO progress.....')

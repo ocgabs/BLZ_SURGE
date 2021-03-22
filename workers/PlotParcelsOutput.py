@@ -37,7 +37,6 @@ def main(config_loc=''):
     code = exit_code(config,'run_parcels')
     if args.force == False:
         if code != '0':
-            print('previous worker did not run successfully, terminating program.....')
             sys.exit(1)
     POLL = eco_poll(args.eco_location,'plot_tracks')
     infiles = sorted(glob(config['input_dir']+'*.nc'))
