@@ -31,71 +31,61 @@ def main(config_loc=''):
         parser = ArgumentParser(description='RUN NEMO worker')
         parser.add_argument('config_location', help='location of YAML config file')
         parser.add_argument('eco_location', help='location of ecosystem file')
-        parser.add_argument('-f', '--force', action='store_true', help='force start of worker')
         args = parser.parse_args()
         config = read_yaml(args.config_location)
     else:
         config = read_yaml(config_loc)
     POLL = eco_poll(args.eco_location,'clean_up')
     print('seeing if surge container is running....')
-    container = Popen(['docker', 'ps'], stdout=PIPE, stderr=PIPE)
-    stdout, stderr = container.communicate()
-    stdout = stdout.decode('utf-8')
-    container = stdout.split('\n')
-    container = container[1].split(' ')
-    container = [x for x in container if x]
-    try:
-        container = container[1]
-        if container == config['container_name']:
-            print('NEMO surge container running, going back to sleep for ' + str(POLL / 60000) + ' minutes')
+    container = chk_container(config)
+    if container:
+        print('container still running, terminating')
+        sys.exit(1)
 
-    except IndexError:
-        print('NEMO surge container not running, going to clean up......')
-        args.force = True
-    if args.force == True:
-        #get todays date in the specifed format
-        # logger_name is required because file system handlers get loaded below
-        print('cleaning up workspace')
-        dirs = dir_gen(config) #generate directory locations as per YAML config file
-        args = args_gen(config) #generate command line arguments as per YAML config file
-        print('############################################################')
-        print('Removing Old Restart Files.....')
-        trim_re = trim_restart_files(args, dirs)
-        print(trim_re)
-        print('############################################################')
-        run = remove_run_files(args,dirs) #remove model runtime files
-        print(run)
-        print('############################################################')
-        print('Removing Old Output Files.....')
-        out_status,out_error = remove_output_file(args,dirs) #remove model output files
-        print(out_status)
-        print(out_error)
-        print('############################################################')
-        print('Removing Old Forcing Files.....')
-        trim_for_rem,trim_for_keep,trim_for_err = trim_force_files(args,dirs)#trim log files to age as defined in YAML file
-        print(trim_for_rem)
-        print(trim_for_keep)
-        print(trim_for_err)
-        print('############################################################')
-        print('Removing Old Log Files.....')
-        trim_logs_rem,trim_logs_keep,trim_logs_err= trim_log_files(args,dirs)
-        print(trim_logs_rem)
-        print(trim_logs_keep)
-        print(trim_logs_err)
-        print('############################################################')
-        print('Removing Old Sargassium Files.....')
-        trim_sar_rem,trim_sar_keep,trim_sar_err = trim_sar_files(args,dirs)
-        print(trim_sar_rem)
-        print(trim_sar_keep)
-        print(trim_sar_err)
-        print('############################################################')
-        print('Removing Old Output Files.....')
-        trim_out_rem,trim_out_keep,trim_out_err = trim_output_files(args,dirs) #trim output files to age as defined in YAML file
-        print(trim_out_rem)
-        print(trim_out_keep)
-        print(trim_out_err)
-        print('clean up finished, going back to sleep for ' + str(POLL / 60000) + ' minutes')
-    return 0
+    #get todays date in the specifed format
+    # logger_name is required because file system handlers get loaded below
+    print('cleaning up workspace')
+    dirs = dir_gen(config) #generate directory locations as per YAML config file
+    args = args_gen(config) #generate command line arguments as per YAML config file
+    print('############################################################')
+    print('Removing Old Restart Files.....')
+    trim_re = trim_restart_files(args, dirs)
+    print(trim_re)
+    print('############################################################')
+    run = remove_run_files(args,dirs) #remove model runtime files
+    print(run)
+    print('############################################################')
+    print('Removing Old Output Files.....')
+    out_status,out_error = remove_output_file(args,dirs) #remove model output files
+    print(out_status)
+    print(out_error)
+    print('############################################################')
+    print('Removing Old Forcing Files.....')
+    trim_for_rem,trim_for_keep,trim_for_err = trim_force_files(args,dirs)#trim log files to age as defined in YAML file
+    print(trim_for_rem)
+    print(trim_for_keep)
+    print(trim_for_err)
+    print('############################################################')
+    print('Removing Old Log Files.....')
+    trim_logs_rem,trim_logs_keep,trim_logs_err= trim_log_files(args,dirs)
+    print(trim_logs_rem)
+    print(trim_logs_keep)
+    print(trim_logs_err)
+    print('############################################################')
+    print('Removing Old Sargassium Files.....')
+    trim_sar_rem,trim_sar_keep,trim_sar_err = trim_sar_files(args,dirs)
+    print(trim_sar_rem)
+    print(trim_sar_keep)
+    print(trim_sar_err)
+    print('############################################################')
+    print('Removing Old Output Files.....')
+    trim_out_rem,trim_out_keep,trim_out_err = trim_output_files(args,dirs) #trim output files to age as defined in YAML file
+    print(trim_out_rem)
+    print(trim_out_keep)
+    print(trim_out_err)
+    print('clean up finished, going back to sleep for ' + str(POLL / 60000) + ' minutes')
+    sys.exit(0)
+
 '''Read in config file with all parameters required'''
 def read_yaml(YAML_loc):
     # safe load YAML file, if file is not present raise exception
@@ -117,6 +107,24 @@ def eco_poll(YAML_loc,worker_name):
         if eco['name'] == worker_name:
             eco_poll = eco['restart_delay']
     return eco_poll
+
+def chk_container(config):
+    cont = True
+    container = Popen(['docker', 'ps'], stdout=PIPE, stderr=PIPE)
+    stdout, stderr = container.communicate()
+    stdout = stdout.decode('utf-8')
+    container = stdout.split('\n')
+    container = container[1].split(' ')
+    container = [x for x in container if x]
+    try:
+        container_ID = container[0]
+        container_name = container[1]
+    except IndexError:
+        cont = False
+        return container
+    if container_name != config['container_name']:
+        cont = False
+    return cont
 
 #Generate directory locations as defined in YAML config file
 def dir_gen(config): 

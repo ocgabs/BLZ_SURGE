@@ -30,13 +30,13 @@ def main(config_loc=''):
     else:
         config = read_yaml(config_loc)
 
-    code1,timestamp1 = exit_code(config,'get_sargassium')
+    code1,timestamp1 = exit_code(config,'get_sargassium','0')
     if code1 != '0':
         sys.exit(1)
     if code1 == -1:
         print('no log entry for previous worker found, assume first start')
         sys.exit(1)
-    code2,timestamp2 = exit_code(config,'find_seed')
+    code2,timestamp2 = exit_code(config,'find_seed','0')
     if code2 == -1:
         print('no log for previous run found, assume first start')
         args.force = True

@@ -51,20 +51,18 @@ def main(config_loc=''):
         config = read_yaml(args.config_location)
     else:
         config = read_yaml(config_loc)
-    code1,timestamp1 = exit_code(config,'process_forcing')
+    code1,timestamp1 = exit_code(config,'process_forcing','0')
     if code1 != '0':
+        print('unable to find a successful run of previous worker, terminating now')
         sys.exit(1)
-    if code1 == -1:
-        print('no log entry for previous worker found, assume first start')
-        sys.exit(1)
-    code2,timestamp2 = exit_code(config,'run_nemo')
+    code2,timestamp2 = exit_code(config,'run_nemo','0')
     if code2 == -1:
         print('no log for previous run found, assume first start')
         args.force = True
 
     if args.force == False:
         timestamp_chk = timestamp_check(timestamp1,timestamp2)
-        if code2 == 0 or 2 and timestamp_chk == True:
+        if timestamp_chk == True:
             print('no successful run of worker since successful run of previous worker, running now....')
             args.force = True
 
@@ -112,6 +110,8 @@ def main(config_loc=''):
         #start the model
         start_nemo(config)
         print('nemo model started')
+        print('sleeping for 1 min to allow container to start')
+        sleep(60)
         print('worker ran successfully, sleeping for '+str(POLL/60000) + ' minutes')
         sys.exit(0)
     else:
@@ -142,18 +142,33 @@ def eco_poll(YAML_loc,worker_name):
             eco_poll = eco['restart_delay']
     return eco_poll
 
-def exit_code(config,worker):
-    with open(config['pm2log'], 'r') as f:
-        lines = f.read().splitlines()
-    for line in range(len(lines),0,-1):
-        last_line = lines[line-1]
-        if worker in last_line and 'exited with code' in last_line:
-            last_line = last_line.split(' ')
-            code = last_line[8]
-            timestamp = last_line[0]
-            timestamp = timestamp[:-1]
-            code = code[1]
-            return code,timestamp
+def exit_code(config,worker,code_find=None):
+    if code_find != None:
+        with open(config['pm2log'], 'r') as f:
+            lines = f.read().splitlines()
+        for line in range(len(lines),0,-1):
+            last_line = lines[line-1]
+            if worker in last_line and 'exited with code'in last_line:
+                last_line = last_line.split(' ')
+                code = last_line[8]
+                code = code[1]
+                if code != code_find:
+                    continue
+                timestamp = last_line[0]
+                timestamp = timestamp[:-1]
+                return code,timestamp
+    if code_find == None:
+        with open(config['pm2log'], 'r') as f:
+            lines = f.read().splitlines()
+        for line in range(len(lines),0,-1):
+            last_line = lines[line-1]
+            if worker in last_line and 'exited with code'in last_line:
+                last_line = last_line.split(' ')
+                code = last_line[8]
+                timestamp = last_line[0]
+                timestamp = timestamp[:-1]
+                code = code[1]
+                return code,timestamp
     return -1,-1
 
 def timestamp_check(timestamp1,timestamp2):

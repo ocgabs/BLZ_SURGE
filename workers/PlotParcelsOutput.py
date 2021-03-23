@@ -34,10 +34,20 @@ def main(config_loc=''):
         config = read_yaml(args.config_location)
     else:
         config = read_yaml(config_loc)
-    code = exit_code(config,'run_parcels')
+    code1,timestamp1 = exit_code(config,'run_parcels','0')
+    if code1 != '0':
+        print('unable to find a successful run of previous worker, terminating now')
+        sys.exit(1)
+    code2,timestamp2 = exit_code(config,'plot_tracks','0')
+    if code2 == -1:
+        print('no log for previous run found, assume first start')
+        args.force = True
+
     if args.force == False:
-        if code != '0':
-            sys.exit(1)
+        timestamp_chk = timestamp_check(timestamp1,timestamp2)
+        if timestamp_chk == True:
+            print('no successful run of worker since successful run of previous worker, running now....')
+            args.force = True
     POLL = eco_poll(args.eco_location,'plot_tracks')
     infiles = sorted(glob(config['input_dir']+'*.nc'))
     infile = infiles[-1]
