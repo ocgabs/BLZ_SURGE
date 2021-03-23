@@ -197,5 +197,13 @@ def exit_code(config,worker,code_find=None):
                 return code,timestamp
     return -1,-1
 
+def timestamp_check(timestamp1,timestamp2):
+    dt_timestamp1 = datetime.datetime.strptime(timestamp1,"%Y-%m-%dT%H:%M:%S")
+    dt_timestamp2 = datetime.datetime.strptime(timestamp2,"%Y-%m-%dT%H:%M:%S")
+    if dt_timestamp1 > dt_timestamp2:
+        return True
+    else:
+        return False
+
 if __name__ == '__main__':
     main()  # pragma: no cover
