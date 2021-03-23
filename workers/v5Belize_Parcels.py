@@ -25,7 +25,7 @@ def main(config_loc=''):
         config = read_yaml(args.config_location)
     else:
         config = read_yaml(config_loc)
-    code1,timestamp1 = exit_code(config,'find_seed','0')
+    code1,timestamp1 = exit_code(config,'watch_nemo','0')
     if code1 != '0':
         print('unable to find a successful run of previous worker, terminating now')
         sys.exit(1)

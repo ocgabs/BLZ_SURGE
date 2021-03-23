@@ -168,18 +168,34 @@ def eco_poll(YAML_loc,worker_name):
             eco_poll = eco['restart_delay']
     return eco_poll
 
-def exit_code(config,worker):
-    with open(config['pm2log'], 'r') as f:
-        lines = f.read().splitlines()
-    for line in range(len(lines),0,-1):
-        last_line = lines[line-1]
-        if worker in last_line and 'exited with code' in last_line:
-            last_line = last_line.split(' ')
-            code = last_line[8]
-            code = code[1]
-            return code
-
-    return -1
+def exit_code(config,worker,code_find=None):
+    if code_find != None:
+        with open(config['pm2log'], 'r') as f:
+            lines = f.read().splitlines()
+        for line in range(len(lines),0,-1):
+            last_line = lines[line-1]
+            if worker in last_line and 'exited with code'in last_line:
+                last_line = last_line.split(' ')
+                code = last_line[8]
+                code = code[1]
+                if code != code_find:
+                    continue
+                timestamp = last_line[0]
+                timestamp = timestamp[:-1]
+                return code,timestamp
+    if code_find == None:
+        with open(config['pm2log'], 'r') as f:
+            lines = f.read().splitlines()
+        for line in range(len(lines),0,-1):
+            last_line = lines[line-1]
+            if worker in last_line and 'exited with code'in last_line:
+                last_line = last_line.split(' ')
+                code = last_line[8]
+                timestamp = last_line[0]
+                timestamp = timestamp[:-1]
+                code = code[1]
+                return code,timestamp
+    return -1,-1
 
 if __name__ == '__main__':
     main()  # pragma: no cover
