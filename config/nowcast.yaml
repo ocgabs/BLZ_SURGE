@@ -37,8 +37,8 @@ weather:
     # Level to download data (msl)
         lev2: lev_mean_sea_level
     # URL template from which to download NOAA NCEP Grid filter files for GFS model
-        url_template: 'https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25_1hr.pl?file={file_name}{hours}&{lev1}=on&{lev2}=on&{var1}=on&{var2}=on&{var3}=on&subregion=&leftlon={leftlon}&rightlon={rightlon}&toplat={toplat}&bottomlat={bottomlat}&dir=%2{run_time}'
-  # Template for GFS model file name
+        url_template: 'https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25_1hr.pl?file={file_name}{hours}&{lev1}=on&{lev2}=on&{var1}=on&{var2}=on&{var3}=on&subregion=&leftlon={leftlon}&rightlon={rightlon}&toplat={toplat}&bottomlat={bottomlat}&dir=%2{run_time}%2Fatmos'
+    # Template for GFS model file name
     # **Must be quoted to project {} characters**
         file_template: 'gfs.t{model_run}z.prgb2.0p25.f'
     # Number of hours requested in the forecast Goes upt 120 (I think)

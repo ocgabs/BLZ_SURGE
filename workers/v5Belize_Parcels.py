@@ -128,12 +128,11 @@ def main(config_loc=''):
         #pset.show(field=field_set.U)
         #pset.show(field=fieldset.U, show_time=datetime(2002, 1, 10, 2))
         #pset.show(field=fieldset.U, show_time=datetime(2002, 1, 10, 2), with_particles=False)
-        print('RUN PARCELS worker Complete, going to sleep for ' + str(POLL/60000) + ' minutes')
+        print('worker ran successfully, exiting now')
         end = time.time()
         print(end-start)
         sys.exit(0)
     else:
-        print('nothing to do, going to sleep for ' + str(POLL/60000) + ' minutes')
         sys.exit(2)
 
 '''Read in config file with all parameters required'''

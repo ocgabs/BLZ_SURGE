@@ -36,12 +36,10 @@ def main(config_loc=''):
     if config_loc == '':
         parser = ArgumentParser(description='RUN NEMO worker')
         parser.add_argument('config_location', help='location of YAML config file')
-        parser.add_argument('eco_location', help='location of ecosystem file')
         args = parser.parse_args()
         config = read_yaml(args.config_location)
     else:
         config = read_yaml(config_loc)
-    POLL = eco_poll(args.eco_location,'get_sargassium')
     day_now = UtcNow()
     # Download Sargassium product and return filename of downloaded product
     get_sar = get_sargassium(config,day_now)# creates the current time and date in the form of a dictionary
@@ -95,7 +93,7 @@ def main(config_loc=''):
         np.unique(sband)
 
 
-    print('worker ran successfully, sleeping for '+str(POLL/3600000)+' hours....')
+    print('worker ran successfully, exiting now')
     sys.exit(0)
 
 '''Read in config file with all parameters required'''

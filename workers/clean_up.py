@@ -30,12 +30,10 @@ def main(config_loc=''):
     if config_loc == '':
         parser = ArgumentParser(description='RUN NEMO worker')
         parser.add_argument('config_location', help='location of YAML config file')
-        parser.add_argument('eco_location', help='location of ecosystem file')
         args = parser.parse_args()
         config = read_yaml(args.config_location)
     else:
         config = read_yaml(config_loc)
-    POLL = eco_poll(args.eco_location,'clean_up')
     print('seeing if surge container is running....')
     container = chk_container(config)
     if container:
@@ -83,7 +81,7 @@ def main(config_loc=''):
     print(trim_out_rem)
     print(trim_out_keep)
     print(trim_out_err)
-    print('clean up finished, going back to sleep for ' + str(POLL / 60000) + ' minutes')
+    print('worker ran successfully, exiting now')
     sys.exit(0)
 
 '''Read in config file with all parameters required'''

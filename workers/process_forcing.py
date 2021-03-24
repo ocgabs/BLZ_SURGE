@@ -53,7 +53,6 @@ def main(config_loc=''):
     if config_loc == '':
         parser = ArgumentParser(description='RUN NEMO worker')
         parser.add_argument('config_location', help='location of YAML config file')
-        parser.add_argument('eco_location', help='location of ecosystem file')
         parser.add_argument('-f', '--force', action='store_true', help='force start of worker')
         args = parser.parse_args()
         if args.force == True:
@@ -78,7 +77,6 @@ def main(config_loc=''):
             print('no successful run of worker since successful run of previous worker, running now....')
             args.force = True
 
-    POLL = eco_poll(args.eco_location,'process_forcing')
     # ymd = arrow.now().format('YYYY-MM-DD') #Get current data in given format
     #
     # list_of_files = glob.glob(config['forcing']['process']['grib_dir']+'*')  # * means all if need specific format then *.csv
@@ -114,7 +112,7 @@ def main(config_loc=''):
         createNetCDF(lats, lons, dir, C, arg)
         loaddataNetCDF(config, arg, dir, model_run, t, i, C)
         print('GRIB files successfully processed')
-        print('worker ran successfully, sleeping for '+str(POLL/60000) + ' minutes')
+        print('worker ran successfully, exiting now')
         sys.exit(0)
     else:
         sys.exit(2)

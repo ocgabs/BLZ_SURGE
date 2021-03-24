@@ -29,12 +29,10 @@ def main(config_loc=''):
     if config_loc == '':
         parser = ArgumentParser(description='Download Weather Worker')
         parser.add_argument('config_location', help='location of YAML config file')
-        parser.add_argument('eco_location', help='location of ecosystem file')
         args = parser.parse_args()
         config = read_yaml(args.config_location)
     else:
         config = read_yaml(config_loc)
-    POLL = eco_poll(args.eco_location, 'download_weather')
     #Load inital variables
     ymd = arrow.now().format('YYYY-MM-DD') #generate Todays date in specified format
     day_now = UtcNow() # creates the current time and date in the form of a dictionary
@@ -89,7 +87,7 @@ def main(config_loc=''):
     if E == 3: #If E = 3 then both the current and previous model runs are not present (or URL template is incorrect)
         print('Error code 3')
         sys.exit(3)
-    print('worker ran successfully, sleeping for '+str(POLL/3600000)+' hours....')
+    print('worker ran successfully, exiting now')
     sys.exit(0)
 
 '''Read in config file with all parameters required'''

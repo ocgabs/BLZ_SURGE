@@ -23,7 +23,6 @@ def main(config_loc=''):
     if config_loc == '':
         parser = ArgumentParser(description='find seeds worker')
         parser.add_argument('config_location', help='location of YAML config file')
-        parser.add_argument('eco_location', help='location of ecosystem file')
         parser.add_argument('-f', '--force', action='store_true', help='force start of worker')
         args = parser.parse_args()
         config = read_yaml(args.config_location)
@@ -47,7 +46,6 @@ def main(config_loc=''):
             print('no successful run of worker since successful run of previous worker, running now....')
             args.force = True
 
-    POLL = eco_poll(args.eco_location,'find_seed')
     # list_of_files = glob(config['dest_dir'] + config['file_parse'])  # * means all if need specific format then *.csv
     # mtimes = 0
     # for file in list_of_files:
@@ -144,7 +142,7 @@ def main(config_loc=''):
         print('saving output CSV file')
         np.savetxt(config['dest_dir'] + 'ilon.csv', ilon, delimiter=',')
         np.savetxt(config['dest_dir'] + 'ilat.csv', ilat, delimiter=',')
-        print('worker ran successfully, sleeping for '+str(POLL/60000) + ' minutes')
+        print('worker ran successfully, exiting now')
         print('The End')
         sys.exit(0)
     else:
@@ -173,20 +171,33 @@ def eco_poll(YAML_loc,worker_name):
             eco_poll = eco['restart_delay']
     return eco_poll
 
-def exit_code(config,worker):
-    with open(config['pm2log'], 'r') as f:
-        lines = f.read().splitlines()
-    for line in range(len(lines),0,-1):
-        last_line = lines[line-1]
-        if worker in last_line and 'exited with code' in last_line:
-            last_line = last_line.split(' ')
-            code = last_line[8]
-            timestamp = last_line[0]
-            timestamp = timestamp[:-1]
-            code = code[1]
-            return code,timestamp
-
-    return -1,-1
+def exit_code(config,worker,code_find=None):
+    if code_find != None:
+        with open(config['pm2log'], 'r') as f:
+            lines = f.read().splitlines()
+        for line in range(len(lines),0,-1):
+            last_line = lines[line-1]
+            if worker in last_line and 'exited with code'in last_line:
+                last_line = last_line.split(' ')
+                code = last_line[8]
+                code = code[1]
+                if code != code_find:
+                    continue
+                timestamp = last_line[0]
+                timestamp = timestamp[:-1]
+                return code,timestamp
+    if code_find == None:
+        with open(config['pm2log'], 'r') as f:
+            lines = f.read().splitlines()
+        for line in range(len(lines),0,-1):
+            last_line = lines[line-1]
+            if worker in last_line and 'exited with code'in last_line:
+                last_line = last_line.split(' ')
+                code = last_line[8]
+                timestamp = last_line[0]
+                timestamp = timestamp[:-1]
+                code = code[1]
+                return
 
 def timestamp_check(timestamp1,timestamp2):
     dt_timestamp1 = datetime.datetime.strptime(timestamp1,"%Y-%m-%dT%H:%M:%S")

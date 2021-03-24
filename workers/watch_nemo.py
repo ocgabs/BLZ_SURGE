@@ -48,7 +48,6 @@ def main(config_loc=''):
     if config_loc == '':
         parser = ArgumentParser(description='Process GRIB files')
         parser.add_argument('config_location', help='location of YAML config file')
-        parser.add_argument('eco_location', help='location of ecosystem file')
         parser.add_argument('-f', '--force', action='store_true', help='force start of worker')
         args = parser.parse_args()
         if args.force == True:
@@ -59,7 +58,6 @@ def main(config_loc=''):
         code = exit_code(config, 'run_nemo')
         if code != '0':
             sys.exit(1)
-    POLL = eco_poll(args.eco_location,'watch_nemo')
     if args.force == False:
         container = chk_container(config)
         if container:
@@ -107,7 +105,7 @@ def main(config_loc=''):
         except IOError:
             print('IO error in moving netcdf output please check output directory')
 
-        print('Watch Worker Complete, going to sleep for ' + str(POLL/60000) + ' minutes')
+        print('worker ran successfully, exiting now')
         sys.exit(0)
 
 
