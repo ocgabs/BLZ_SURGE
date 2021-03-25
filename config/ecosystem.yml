@@ -1,12 +1,19 @@
 #Ecosystem config file for PM2 to run the components of the NEMO Sargassium Operational Forecast System
 
 apps:
+#  - script          : ./workers/scheduler.py
+#    name            : 'scheduler'
+#    cwd             : '/home/thopri/BLZ-SURGE'
+#    args            : '-- config/nowcast.yaml'
+#    watch           : false
+#    log_date_format : 'YYYY-MM-DD HH:mm:ss.SSS'
+
   - script          : ./workers/download_weather.py
     name            : 'download_weather'
     cwd             : '/home/thopri/BLZ-SURGE'
     args            : '-- config/nowcast.yaml'
     watch           : false
-    restart_delay   : 86400000
+    autorestart     : false
     log_date_format : 'YYYY-MM-DD HH:mm:ss.SSS'
 
   - script          : ./workers/process_forcing.py
@@ -38,7 +45,7 @@ apps:
     cwd             : '/home/thopri/BLZ-SURGE'
     args            : '-- config/nowcast.yaml'
     watch           : false
-    restart_delay   : 86400000
+    autorestart     : false
     log_date_format : 'YYYY-MM-DD HH:mm:ss.SSS'
 
   - script          : ./workers/find_seed.py

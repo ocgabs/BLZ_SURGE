@@ -62,7 +62,7 @@ def main(config_loc=''):
         sband = data.read(1)
         # FIND pixels with sargassum
         print('finding seed locations....')
-        spx ,spy =np.where((sband < 252) & (sband > 0))
+        spx ,spy =np.where((sband < config['sband_max']) & (sband > config['sband_min']))
         spx.size
         # will be good to read more about the product to know what the different values mean!
 

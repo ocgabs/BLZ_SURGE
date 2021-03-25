@@ -15,6 +15,9 @@
 #MODEL:
 #      container_name
 
+SCHEDULER:
+        start_time_weather: "09:00"
+        start_time_sar: "09:15"
 #Download Weather worker configuration
 weather:
   download:
@@ -137,7 +140,7 @@ RUN_NEMO:
         results archive: /home/thopri/BLZ-SURGE/RUN_NEMO/
   # Which container framework to use
         container: podman
-        container_name: docker.io/thopri/nemo-surge:8814
+        container_name: docker.io/thopri/nemo-surge-blz:8814
         container_mount: /home/thopri/BLZ-SURGE/
         container_dir: BLZ-SURGE
   # Time to start model, starting at midnight fails due to no previous day data
@@ -158,7 +161,7 @@ WATCH_NEMO:
     #name of NEMO model configuration
         config_name: BLZ-SURGE
     # name of container to watch
-        container_name: docker.io/thopri/nemo-surge:8814
+        container_name: docker.io/thopri/nemo-surge-blz:8814
         status_dir: /home/thopri/BLZ-SURGE/config/
         WATCH_INTERVAL: 1 # minutes
         pm2log: /home/thopri/.pm2/pm2.log
@@ -231,6 +234,8 @@ FIND_SEEDS:
       file_parse:  'C*DENSITY.png'
       pm2log: /home/thopri/.pm2/pm2.log
       status_dir: /home/thopri/BLZ-SURGE/config/
+      sband_max: 252
+      sband_min: 0
 
 RUN_PARCELS:
         lon_csv: '/home/thopri/BLZ-SURGE/sargassium/ilon.csv'
@@ -291,4 +296,4 @@ clean:
         out_1: tracks/
         out_2: netcdf/
         out_3: plots/
-        container_name: docker.io/thopri/nemo-surge:8814
+        container_name: docker.io/thopri/nemo-surge-blz:8814
