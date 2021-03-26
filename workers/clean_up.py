@@ -38,7 +38,7 @@ def main(config_loc=''):
     container = chk_container(config)
     if container:
         print('container still running, terminating')
-        sys.exit(1)
+        sys.exit(7)
 
     #get todays date in the specifed format
     # logger_name is required because file system handlers get loaded below

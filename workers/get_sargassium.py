@@ -46,22 +46,22 @@ def main(config_loc=''):
     if type(get_sar) == int:
         print('Error Code: '+str(get_sar))
         print('get sargassium product failed, refer to error code printed above')
-        return 'get_sar error'
+        sys.exit(3)
     if type(get_sar) != str:
         print(type(get_sar))
         print('unexpected return from getting sargassium product expected string')
-        return 'get_sar_error'
+        sys.exit(3)
     # Download the file
 
     trans_sar = transform_sargassium(config,get_sar)
     if trans_sar != 0:
         print('Error Code: '+str(trans_sar))
         print('transformation of sargassium product failed, program terminating...')
-        return 'transform_sar error'
+        sys.exit(4)
     if type(trans_sar) != int:
         print(type(trans_sar))
         print('unexpected return from transforming sargassium product, expected int')
-        return 'transform_sar error'
+        sys.exit(4)
 
     data = rasterio.open(config['dest_dir']+config['tiff_name'])
     sband = data.read(1)

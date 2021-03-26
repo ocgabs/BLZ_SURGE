@@ -2,22 +2,34 @@
 
 # TODO put paths into one section and migrate to one work dir string
 #PATHS:
-#      work_dir: /home/thopri/BLZ-SURGE
+#      home_dir: /home/thopri
+#      work_dir: /BLZ-SURGE
 #      config_dir: /config
 #      status_dir: /config
 #      grib_dir: /grib
 #      netcdf_dir: /netcdf
+#      sargassum_dir: /sargassum
 #      container_work_dir: /BLZ-SURGE
 #      netcdf_cont_dir: /netcdf
 #      namelist_cont_dir: /namelist
 #      weights_cont_dir: /weights
 #      container_log: /logs
+#      pm2log: /.pm2/pm2.log
+#      bathy_meter: /INPUTS/BLZE12_bathy_meter.nc
+#      coordinates: /INPUTS/BLZE12_coordinates.nc
+#      output_dir: /OUTPUTS
+#      output_netcdf: /netcdf
+#      output_plots: /plots
+#      output_tracks: /tracks
+#      NEMO_run_dir: /RUN_NEMO
+#      restart_dir: /restart
+#
 #MODEL:
-#      container_name
+#      container_name: docker.io/thopri/nemo-surge-blz:8814
+#      config_name: BLZ-SURGE
+#      container: podman
+#
 
-SCHEDULER:
-        start_time_weather: "09:00"
-        start_time_sar: "09:15"
 #Download Weather worker configuration
 weather:
   download:

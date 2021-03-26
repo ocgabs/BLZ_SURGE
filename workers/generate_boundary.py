@@ -61,7 +61,7 @@ def main():
         check = QA_weights_file(outputfilename)
 
     checklist = {f'{start_ymd} boundary conditions files generated'}
-    return 0
+    sys.exit(0)
 
 '''Read in config file with all parameters required'''
 def read_yaml(YAML_loc):

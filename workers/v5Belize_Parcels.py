@@ -81,7 +81,7 @@ def main(config_loc=''):
 
         if ufiles.split('_')[3] != vfiles.split('_')[3] and ufiles.split('_')[2] != vfiles.split('_')[2]:
             print('error U and V files do not have same start and end dates.... terminating')
-            sys.exit(3)
+            sys.exit(6)
 
         grid_file = config['grid_file']
         filenames = {'U': {'lon': grid_file,

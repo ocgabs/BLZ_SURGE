@@ -78,10 +78,15 @@ def main(config_loc=''):
     if args.force == True:
         #get start date in specified format
         start_ymd = arrow.now().format('YYYY-MM-DD-HH')
+        print(start_ymd)
         delete = delete_old_fluxes(config) #remove old flux boundary files
+        print(delete)
         move = move_netcdf_files(config) #move netcdf boundary files to flux folder
+        print(move)
         params = process_filename(config) #read config parameters from filename
+        print(params)
         move1 = move_weight_files(config) #move weight files to flux folder
+        print(move1)
         weight_vars = read_weight_vars(config) #read weight parameters from files and populate dictionary
         leap = is_leap(params)# is it a leap year?
         day_str = day_of_the_week(params) #generate a string of correct format specifying day of the week

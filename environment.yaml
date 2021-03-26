@@ -234,4 +234,3 @@ dependencies:
     - snuggs==1.4.7
     - soupsieve==2.2
     - urllib3==1.26.3
-prefix: /home/thopri/miniconda3/envs/BLZ_SURGE
