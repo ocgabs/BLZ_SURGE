@@ -30,3 +30,4 @@ output.namelist.dyn
 *.dyn
 Surge_Part_Manual.bak
 *.log
+*.bin

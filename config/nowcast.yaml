@@ -151,8 +151,8 @@ RUN_NEMO:
 ## Directory where run results are stored
         results archive: /home/thopri/BLZ-SURGE/RUN_NEMO/
   # Which container framework to use
-        container: podman
-        container_name: docker.io/thopri/nemo-surge-blz:8814
+        container: docker
+        container_name: thopri/nemo-surge-blz:8814
         container_mount: /home/thopri/BLZ-SURGE/
         container_dir: BLZ-SURGE
   # Time to start model, starting at midnight fails due to no previous day data
@@ -173,7 +173,7 @@ WATCH_NEMO:
     #name of NEMO model configuration
         config_name: BLZ-SURGE
     # name of container to watch
-        container_name: docker.io/thopri/nemo-surge-blz:8814
+        container_name: thopri/nemo-surge-blz:8814
         status_dir: /home/thopri/BLZ-SURGE/config/
         WATCH_INTERVAL: 1 # minutes
         pm2log: /home/thopri/.pm2/pm2.log
@@ -308,4 +308,4 @@ clean:
         out_1: tracks/
         out_2: netcdf/
         out_3: plots/
-        container_name: docker.io/thopri/nemo-surge-blz:8814
+        container_name: thopri/nemo-surge-blz:8814

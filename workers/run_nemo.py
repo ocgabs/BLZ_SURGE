@@ -35,7 +35,6 @@ from time import sleep
 import json
 import glob
 import time
-import datetime
 
 #main function to run the NEMO model
 def main(config_loc=''):
@@ -101,8 +100,9 @@ def main(config_loc=''):
             restart_write = write_restart(config)
         else:
             print('restart disabled, starting new timestep log.......')
-            with open(config['config_dir']+'timestep_log.json','w') as fp:
-                json.dump(params, fp)
+            write = write_timestep_log(params,config)
+            if write != 0:
+                print('Warning: restart timestep log file did not write successfully, successive runs may fail.')
             nn_it000 = 1
             date0 = params['year']+params['month']+params['day']
             nn_itend = int(sim_length(config) - (3600/config['time_step']))
@@ -175,8 +175,8 @@ def exit_code(config,worker,code_find=None):
     return -1,-1
 
 def timestamp_check(timestamp1,timestamp2):
-    dt_timestamp1 = datetime.datetime.strptime(timestamp1,"%Y-%m-%dT%H:%M:%S")
-    dt_timestamp2 = datetime.datetime.strptime(timestamp2,"%Y-%m-%dT%H:%M:%S")
+    dt_timestamp1 = datetime.strptime(timestamp1,"%Y-%m-%dT%H:%M:%S")
+    dt_timestamp2 = datetime.strptime(timestamp2,"%Y-%m-%dT%H:%M:%S")
     if dt_timestamp1 > dt_timestamp2:
         return True
     else:
@@ -288,14 +288,21 @@ def length_restart(config, timesteps):
 def read_timestep_log(config,params):
     with open(config['config_dir']+'timestep_log.json','r') as f:
         t_log = json.load(f)
-    t0 = t_log['year']+'-'+t_log['month']+'-'+t_log['day']+'-'+str(config['hour_start'])
-    current_t = params['year']+'-'+params['month']+'-'+params['day']+'-'+str(config['hour_start'])
+    t0 = t_log['year']+'-'+t_log['month']+'-'+t_log['day']+'-'+t_log['hour']
+    current_t = params['year']+'-'+params['month']+'-'+params['day']+'-'+config['hour_start']
     FMT = '%Y-%m-%d-%H'
     tdelta = datetime.strptime(current_t,FMT)-datetime.strptime(t0,FMT)
     tdelta_sec = tdelta.total_seconds()
     timesteps = int(tdelta_sec/config['time_step'])
     date0 = t_log['year']+t_log['month']+t_log['day']
     return timesteps, date0
+
+def write_timestep_log(params,config):
+    ts_log = {'config': params['config'], 'year': params['year'], 'month': params['month'], 'day': params['day'],
+              'hour': config['hour_start']}
+    with open(config['config_dir'] + 'timestep_log.json', 'w') as fp:
+        json.dump(ts_log, fp)
+    return 0
 
 #Read the weight netcdf file names to get the required variables to populate namelist file
 def read_weight_vars(config):
@@ -350,7 +357,7 @@ def pop_namelist(config, params, leap, weight_vars, nn_itend, day_str, restart_l
     filedata = filedata.replace('key_A', config['config_name'])
     filedata = filedata.replace('key_B', str(nn_itend))
     filedata = filedata.replace('key_C', date0)
-    filedata = filedata.replace('key_D', params['hour'])
+    filedata = filedata.replace('key_D', config['hour_start'])
     filedata = filedata.replace('key_E', str(leap))
     filedata = filedata.replace('key_F', str(config['restart']))
     filedata = filedata.replace('key_G', weight_vars['name_short1'])
