@@ -18,7 +18,6 @@ def main(config_loc=''):
     if config_loc == '':
         parser = ArgumentParser(description='RUN PARCELS worker')
         parser.add_argument('config_location', help='location of YAML config file')
-        parser.add_argument('eco_location', help='location of ecosystem file')
         parser.add_argument('-f', '--force', action='store_true', help='force start of worker')
         args = parser.parse_args()
 
@@ -40,7 +39,6 @@ def main(config_loc=''):
             print('no successful run of worker since successful run of previous worker, running now....')
             args.force = True
 
-    POLL = eco_poll(args.eco_location,'run_parcels')
     # list_of_files = glob(config['data_path'] + config['file_parse'])  # * means all if need specific format then *.csv
     # mtimes = 0
     # for file in list_of_files:
