@@ -220,17 +220,23 @@ dependencies:
   - zstd=1.4.8=ha95c52a_1
   - pip:
     - affine==2.3.0
+    - apscheduler==3.7.0
     - beautifulsoup4==4.9.3
     - bs4==0.0.1
     - chardet==4.0.0
     - click-plugins==1.1.1
     - cligj==0.7.1
     - descartes==1.1.0
+    - docker==4.4.4
     - idna==2.10
     - pygrib==2.1.3
     - pyproj==3.0.0.post1
     - rasterio==1.2.1
     - requests==2.25.1
+    - schedule==1.0.0
     - snuggs==1.4.7
     - soupsieve==2.2
+    - supervisor==4.2.2
+    - tzlocal==2.1
     - urllib3==1.26.3
+    - websocket-client==0.58.0
