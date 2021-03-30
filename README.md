@@ -80,7 +80,7 @@ $ npm install pm2:latest -g
 The framework is now installed and ready to use. To start the framework the following command is required:
 
 ```commandline
-$ pm2 config/ecosystem.yml
+$ pm2 start config/ecosystem.yml
 ```
 To monitor the system it recommended to run the following in separate terminals:
 
