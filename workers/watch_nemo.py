@@ -95,6 +95,7 @@ def main(config_loc=''):
         run_succeeded = _confirm_run_success(config, sim_length)
         if not run_succeeded:
             print('Run Failed')
+            sys.exit(8)
 
         try:
             list_of_files = glob(config['results_dir'] + config['file_parse'])
