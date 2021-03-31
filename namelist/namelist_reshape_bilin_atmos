@@ -12,7 +12,7 @@
      nemo_lat: name of latitude variable in the coordinates.nc
 /
 &grid_inputs
-    input_file = '/BLZ-SURGE/netcdf/BLZ-SURGE_u10_y2021m03d05h00.nc'
+    input_file = '/BLZ-SURGE/netcdf/GFS/BLZ-SURGE_u10_y2021m03d31h00.nc'
     nemo_file = '/BLZ-SURGE/INPUTS/domain_cfg.nc'
     datagrid_file = 'remap_data_grid_atmos.nc'
     nemogrid_file = 'remap_nemo_grid_atmos.nc'

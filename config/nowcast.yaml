@@ -89,7 +89,7 @@ forcing:
         netcdf_dest_dir: '/home/thopri/BLZ-SURGE/netcdf/GFS/'
     #Grib downloaded files location
         grib_dir: '/home/thopri/BLZ-SURGE/grib/'
-    #Config name NOTE: do NOT use - in the name as it will break parsing of file names
+    #Config name NOTE: do NOT use _ in the name as it will break parsing of file names
         netcdf_name: BLZ-SURGE
         config_dir: /home/thopri/BLZ-SURGE/config/
         pm2log: /home/thopri/.pm2/pm2.log
@@ -109,7 +109,7 @@ generate:
         input_key_1: 'input_key_1'
         input_key_2: 'input_key_2'
     #destination directories for netcdf, namelist files and output weighted files
-        netcdf_dest_dir: '/BLZ-SURGE/netcdf/'
+        netcdf_dest_dir: '/BLZ-SURGE/netcdf/GFS/'
         namelist_dir: '/BLZ-SURGE/namelist/'
         weights_dir: '/BLZ-SURGE/weights/'
 
