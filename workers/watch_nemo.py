@@ -88,6 +88,7 @@ def main(config_loc=''):
             container = chk_container(config)
             if not container:
                 print('container not running, will see if run was successful')
+                break
 
             time.sleep(config['WATCH_INTERVAL']*60)
         #check to if model run was successful

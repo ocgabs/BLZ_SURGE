@@ -10,4 +10,4 @@ ln -s -f /BLZ-SURGE/INPUTS bdydta
 ln -s -f /BLZ-SURGE/INPUTS/domain_cfg.nc .
 sleep 1
 echo "Running Model Now"
-mpirun -n 4 ./nemo.exe : -n 2 ./xios_server.exe
+mpirun -n 1 ./nemo.exe : -n 1 ./xios_server.exe
