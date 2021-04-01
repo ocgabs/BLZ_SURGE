@@ -61,14 +61,14 @@ def main(config_loc=''):
     else:
         config = read_yaml(config_loc)
     if args.force == False:
-    	code1,timestamp1 = exit_code(config,'download_weather','0')
-    	if code1 != '0':
-        	print('unable to find a successful run of previous worker, terminating now')
-        	sys.exit(1)
-    	code2,timestamp2 = exit_code(config,'process_forcing','0')
-    	if code2 == -1:
-        	print('no log for previous run found, assume first start')
-        	args.force = True
+        code1,timestamp1 = exit_code(config,'download_weather','0')
+        if code1 != '0':
+            print('unable to find a successful run of previous worker, terminating now')
+            sys.exit(1)
+        code2,timestamp2 = exit_code(config,'process_forcing','0')
+        if code2 == -1:
+            print('no log for previous run found, assume first start')
+            args.force = True
 
         timestamp_chk = timestamp_check(timestamp1,timestamp2)
         print(timestamp1)
