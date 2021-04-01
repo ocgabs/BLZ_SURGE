@@ -184,29 +184,30 @@ WATCH_NEMO:
 make:
   plots:
     #location of station list file
-        station_dir: /SRC/config/
+        station_dir: /home/thopri/BLZ-SURGE/config/
     #location to save processed image plots both spatial and timeseries
-        plots_dir: /SRC/output/plots/
+        plots_dir: /home/thopri/BLZ-SURGE/OUTPUTS/plots/
     #location to save images to make gif animation
-        animation_plots_dir: /SRC/output/plots/animation_plots/
+        animation_plots_dir: /home/thopri/BLZ-SURGE/OUTPUTS/plots/animation_plots/
     #location of output NETCDF directory
-        netcdf_dir: /SRC/output/netcdf/
+        netcdf_dir: /home/thopri/BLZ-SURGE/OUTPUTS/netcdf/
     #location of model outputs
-        model_output_dir: /SRC/NEMOGCM/CONFIG/TEST/EXP00/
+        model_output_dir: /home/thopri/BLZ-SURGE/OUTPUTS/netcdf/
     #location to save CSV output
-        csv_dir: /SRC/output/csv/
+        csv_dir: /home/thopri/BLZ-SURGE/OUTPUTS/csv/
     #model time step    
         time_step: 1 #In seconds (6 mins)
     #total time of model run (hours)
-        total_time: 120
+        total_time: 119
     #interval for spatial plots e.g. every 12 hours
-        interval: 10 #timesteps 10 time steps at 6 mins = 1 hour
+        interval: 1 #timesteps 10 time steps at 6 mins = 1 hour
     #global threshold to check across whole domain (currently not active)
         global_thres: 0.2
     #name of station list file
         station_list: station_list.txt
     #name of NEMO model configuration
         config_name: BLZ-SURGE
+        pm2log: /home/thopri/.pm2/pm2.log
 
 #Seeding Open Parcels worker configuration
 GET_SAR:

@@ -66,6 +66,14 @@ apps:
     restart_delay   : 600000
     log_date_format : 'YYYY-MM-DD HH:mm:ss.SSS'
 
+  - script          : ./workers/make_plots.py
+    name            : 'make_plots'
+    cwd             : '/home/thopri/BLZ-SURGE'
+    args            : '-- config/nowcast.yaml'
+    watch           : false
+    restart_delay   : 600000
+    log_date_format : 'YYYY-MM-DD HH:mm:ss.SSS'
+
   - script: ./workers/clean_up.py
     name: 'clean_up'
     cwd: '/home/thopri/BLZ-SURGE'

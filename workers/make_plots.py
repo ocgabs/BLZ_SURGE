@@ -60,93 +60,135 @@ import cartopy.crs as ccrs
 import pandas as pd
 
 import arrow
-
-from nemo_nowcast import NowcastWorker
-
-
-NAME = 'make_plots'
-logger = logging.getLogger(NAME)
-
-#redirect stdout and stderr to log files for debugging and monitoring purposes
-sys.stdout = open('/SRC/logging/worker_logs/make_plots.txt', 'w')
-sys.stderr = open('/SRC/logging/worker_logs/make_plots_errors.txt', 'w')
-
-def main():
-    """Set up and run the worker.
-
-    For command-line usage see:
-
-    :command:`python -m nowcast.workers.make_plots --help`
-    """
-    worker = NowcastWorker(NAME, description=__doc__)
-    worker.init_cli()
-    worker.run(make_plots, success, failure)
-
-
-def success(parsed_args):
-    ymd = arrow.now().format('YYYY-MM-DD')
-    logger.info(
-        f'{ymd} plot generation successful',
-        extra={
-            'start_date': ymd
-        }
-    )
-    msg_type = 'success'
-    return 'success'
-
-
-def failure(parsed_args):
-    ymd = arrow.now().format('YYYY-MM-DD')
-    logger.critical(
-        f'{ymd} plot generation failed',
-        extra={
-            'failed_date': ymd
-        }
-    )
-    msg_type = 'failure'
-    return 'failure'
+from argparse import ArgumentParser
+import yaml
 
 #Main function that processes model output
-def make_plots(parsed_args, config, *args):
-    #get todays date in the format specifed
-    start_ymd = arrow.now().format('YYYY-MM-DD')
-    logger.info(
-        f'producing NEMO output plots on {start_ymd}',
-        extra={
-            'start date': start_ymd
-        }
-    )
-    dirs = dir_gen(config) #generate directory locations as per YAML config file
-    logger.debug(dirs)
-    args = args_gen(config) #generate command arguments as per YAML config file
-    logger.debug(args)
-    dataset_name = readoutputname(dirs) #read model output file name to get datasetname
-    logger.debug(dataset_name)
-    lat,lon = read_coords(dataset_name) #extract lat and lons from dataset file
-    stations = read_stations(dirs, args) #read station_location txt file for time series locations and thresholds
-    logger.debug(stations)
-    run_time = write_run_time(dataset_name, dirs)
-    logger.debug(run_time)
-    station_loc = plot_station_locations(dirs, args, stations, lat, lon)
-    logger.debug(station_loc)
-    station_ind = generate_IJ(lat, lon, stations) #calculate I and J indices for time series locations
-    logger.debug(station_ind)
-    time_series = extract_timeseries(dataset_name, station_ind) #extract time series for time series locations
-    plot = plot_timeseries(time_series, dirs, station_ind, args)
-    logger.debug(plot)       
-    plot1 = plot_SSH(dataset_name, args, lat, lon, dirs) #plot ssh spatial plots at the defined interval
-    logger.debug(plot1)
-    thres_check = check_thres_station(time_series, station_ind, dirs, args) #check for threshold exceedance at defined station locations
-    logger.debug(thres_check)
-    csv = export_csv(time_series, args, dirs) #export time series as csv files
-    logger.debug(csv)
-    result = move_netcdf(dirs, dataset_name) #move model output netcdf file from model run directory
-    logger.debug(result)
-    #test = global_thres_exccedance_check(time_series, args)
-    #logger.debug(test) 
+#main function to run the NEMO model
+def main(config_loc=''):
+    # start = time.time()
+    if config_loc == '':
+        parser = ArgumentParser(description='plotting worker')
+        parser.add_argument('config_location', help='location of YAML config file')
+        parser.add_argument('-f', '--force', action='store_true', help='force start of worker')
+        args = parser.parse_args()
+        if args.force == True:
+            print('force flag enabled, running worker now....')
+        config = read_yaml(args.config_location)
+    else:
+        config = read_yaml(config_loc)
 
-    checklist = {f'{start_ymd} generated plots'}
-    return checklist
+    if args.force == False:
+        code1,timestamp1 = exit_code(config,'watch_nemo','0')
+        if code1 != '0':
+            print('unable to find a successful run of previous worker, terminating now')
+            sys.exit(1)
+        code2,timestamp2 = exit_code(config,'make_plots','0')
+        if code2 == -1:
+            print('no log for previous run found, assume first start')
+            args.force = True
+
+        timestamp_chk = timestamp_check(timestamp1,timestamp2)
+        if timestamp_chk == True:
+            print('no successful run of worker since successful run of previous worker, running now....')
+            args.force = True
+
+    if args.force == True:
+        #get todays date in the format specifed
+        start_ymd = arrow.now().format('YYYY-MM-DD')
+        dirs = dir_gen(config) #generate directory locations as per YAML config file
+        print(dirs)
+        args = args_gen(config) #generate command arguments as per YAML config file
+        print(args)
+        dataset_name = readoutputname(dirs) #read model output file name to get datasetname
+        print(dataset_name)
+        lat,lon = read_coords(dataset_name) #extract lat and lons from dataset file
+        stations = read_stations(dirs, args) #read station_location txt file for time series locations and thresholds
+        print(stations)
+        run_time = write_run_time(dataset_name, dirs)
+        print(run_time)
+        #station_loc = plot_station_locations(dirs, args, stations, lat, lon)
+        #print(station_loc)
+        station_ind = generate_IJ(lat, lon, stations) #calculate I and J indices for time series locations
+        print(station_ind)
+        time_series = extract_timeseries(dataset_name, station_ind) #extract time series for time series locations
+        plot = plot_timeseries(time_series, dirs, station_ind, args)
+        print(plot)
+        #plot1 = plot_SSH(dataset_name, args, lat, lon, dirs) #plot ssh spatial plots at the defined interval
+        #print(plot1)
+        thres_check = check_thres_station(time_series, station_ind, dirs, args) #check for threshold exceedance at defined station locations
+        print(thres_check)
+        csv = export_csv(time_series, args, dirs) #export time series as csv files
+        print(csv)
+        #result = move_netcdf(dirs, dataset_name) #move model output netcdf file from model run directory
+        #print(result)
+        test = global_thres_exccedance_check(time_series, args)
+        print(test)
+
+        print('worker ran successfully, exiting now')
+        sys.exit(0)
+    else:
+        sys.exit(2)
+
+'''Read in config file with all parameters required'''
+def read_yaml(YAML_loc):
+    # safe load YAML file, if file is not present raise exception
+    if not os.path.isfile(YAML_loc):
+        print('DONT PANIC: The yaml file specified does not exist')
+        return 1
+    with open(YAML_loc) as f:
+        config = yaml.safe_load(f)
+    return config
+
+def eco_poll(YAML_loc,worker_name):
+    # safe load YAML file, if file is not present raise exception
+    if not os.path.isfile(YAML_loc):
+        print('DONT PANIC: The yaml file specified does not exist')
+        return 1
+    with open(YAML_loc) as f:
+        eco_file = yaml.safe_load(f)
+    for eco in eco_file['apps']:
+        if eco['name'] == worker_name:
+            eco_poll = eco['restart_delay']
+    return eco_poll
+
+def exit_code(config,worker,code_find=None):
+    if code_find != None:
+        with open(config['pm2log'], 'r') as f:
+            lines = f.read().splitlines()
+        for line in range(len(lines),0,-1):
+            last_line = lines[line-1]
+            if worker in last_line and 'exited with code'in last_line:
+                last_line = last_line.split(' ')
+                code = last_line[8]
+                code = code[1]
+                if code != code_find:
+                    continue
+                timestamp = last_line[0]
+                timestamp = timestamp[:-1]
+                return code,timestamp
+    if code_find == None:
+        with open(config['pm2log'], 'r') as f:
+            lines = f.read().splitlines()
+        for line in range(len(lines),0,-1):
+            last_line = lines[line-1]
+            if worker in last_line and 'exited with code'in last_line:
+                last_line = last_line.split(' ')
+                code = last_line[8]
+                timestamp = last_line[0]
+                timestamp = timestamp[:-1]
+                code = code[1]
+                return code,timestamp
+    return -1,-1
+
+def timestamp_check(timestamp1,timestamp2):
+    dt_timestamp1 = datetime.strptime(timestamp1,"%Y-%m-%dT%H:%M:%S")
+    dt_timestamp2 = datetime.strptime(timestamp2,"%Y-%m-%dT%H:%M:%S")
+    if dt_timestamp1 > dt_timestamp2:
+        return True
+    else:
+        return False
+
 #Function to generate directory locations based on YAML config file
 def dir_gen(config): 
     dirs = {
@@ -171,9 +213,9 @@ def args_gen(config):
     return args
 #Read model output filename from model run diectory
 def readoutputname(dirs):
-    list_of_files = glob.glob(dirs["model_output_dir"]+'*.nc')
-    #sorted_files = sorted(list_of_files, key=os.path.getctime)
-    latest_file = max(list_of_files, key=os.path.getctime)
+    list_of_files = glob.glob(dirs["model_output_dir"]+'*T.nc')
+    sorted_files = sorted(list_of_files, key=os.path.getctime)
+    latest_file = max(sorted_files, key=os.path.getmtime)
     return latest_file
 #Function to read the station locations from the station list file define in YAML config
 def read_stations(dirs, args):
@@ -268,7 +310,7 @@ def plot_timeseries(time_series, dirs, station_ind, args):
         thres = station_ind[key][2]
         plt.rc('font', size=18)
         plt.figure(key,figsize=[15,15])
-        plt.title('Forecast for '+key,fontsize=20)
+        plt.title('Forecast for '+key+' starting on '+start_time,fontsize=20)
         plt.xlabel('Hours')
         plt.ylabel('Elevation (m)')
         
@@ -281,7 +323,7 @@ def plot_timeseries(time_series, dirs, station_ind, args):
         plt.legend()
         plt.grid(True)
         plt.show()
-        plt.savefig(dirs['plots_dir']+key+"_sea_surface_height.png",bbox_inches='tight')
+        plt.savefig(dirs['plots_dir']+key+'_'+start_time+"_sea_surface_height.png",bbox_inches='tight')
         
     status = 'time series plot generation successful'
     return status
@@ -302,7 +344,7 @@ def plot_SSH(dataset_name, args, lat, lon, dirs):
     start_time = times["start"]
     fmt='%Y-%m-%d'
     start_time = datetime.strptime(start_time,fmt)
-    for i in range(time_l): 
+    for i in range(time_l):
         plt.figure(figsize=[15,18])  # a new figure window
         ax = plt.subplot(111, projection=ccrs.PlateCarree())  # specify (nrows, ncols, axnum)
         ax.set_extent([minlon,maxlon,minlat,maxlat],crs=ccrs.PlateCarree()) #set extent
@@ -400,7 +442,9 @@ def global_thres_exccedance_check(time_series, args):
         return status
 #Function to check for threshold exceedance at station locations 
 def check_thres_station(time_series, station_ind, dirs, args):
-    ymd = arrow.now().format('YYYY-MM-DD-HH')
+    with open(dirs['plots_dir']+'run_time.json', 'r') as i:
+        times = json.load(i)
+    start_time = times["start"]
     thres_check = {}
     interval = 1
     exceed = {}
@@ -439,17 +483,21 @@ def check_thres_station(time_series, station_ind, dirs, args):
         else:
             status = "threshold not exceeded"
 
-    with open(dirs['csv_dir']+ymd+'_thres_check.json','w') as f:
+    with open(dirs['csv_dir']+start_time+'_thres_check.json','w') as f:
         json.dump(thres_check,f)
     return status
 
 #Export CSV files for each station location into output folder
 def export_csv(time_series, args, dirs):
-    ymd = arrow.now().format('YYYY-MM-DD-HH')
-    status = 'unable to export csv files of station locations'
-    for key in time_series:
-        pd.DataFrame(time_series[key]).to_csv(dirs['csv_dir']+key+'_'+ymd+'_time_series.csv', index=False, header = ['time, seconds from 1900','sea surface height (m)'])
-    status = 'csv export successful'
+    with open(dirs['plots_dir']+'run_time.json', 'r') as i:
+        times = json.load(i)
+    start_time = times["start"]
+    try:
+        for key in time_series:
+            pd.DataFrame(time_series[key]).to_csv(dirs['csv_dir']+key+'_'+start_time+'_time_series.csv', index=False, header = ['time, seconds from 1900','sea surface height (m)'])
+        status = 'csv export successful'
+    except IOError:
+        status = 'unable to export csv files of station locations'
     return status
 # move model output netcdf file to output folder
 def move_netcdf(dirs, dataset_name):

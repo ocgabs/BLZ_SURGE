@@ -28,19 +28,17 @@ def main(config_loc=''):
         config = read_yaml(args.config_location)
     else:
         config = read_yaml(config_loc)
-
-    code1,timestamp1 = exit_code(config,'get_sargassium','0')
-    if code1 != '0':
-        sys.exit(1)
-    if code1 == -1:
-        print('no log entry for previous worker found, assume first start')
-        sys.exit(1)
-    code2,timestamp2 = exit_code(config,'find_seed','0')
-    if code2 == -1:
-        print('no log for previous run found, assume first start')
-        args.force = True
-
     if args.force == False:
+        code1,timestamp1 = exit_code(config,'get_sargassium','0')
+        if code1 != '0':
+            sys.exit(1)
+        if code1 == -1:
+            print('no log entry for previous worker found, assume first start')
+            sys.exit(1)
+        code2,timestamp2 = exit_code(config,'find_seed','0')
+        if code2 == -1:
+            print('no log for previous run found, assume first start')
+            args.force = True
         timestamp_chk = timestamp_check(timestamp1,timestamp2)
         if code2 == 0 or 2 and timestamp_chk == True:
             print('no successful run of worker since successful run of previous worker, running now....')
