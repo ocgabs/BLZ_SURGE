@@ -31,3 +31,4 @@ output.namelist.dyn
 Surge_Part_Manual.bak
 *.log
 *.bin
+!config/station_list.txt

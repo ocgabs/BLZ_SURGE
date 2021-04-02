@@ -69,7 +69,7 @@ def main(config_loc=''):
         if code2 == -1:
             print('no log for previous run found, assume first start')
             args.force = True
-
+    if args.force == False:
         timestamp_chk = timestamp_check(timestamp1,timestamp2)
         print(timestamp1)
         print(timestamp2)
