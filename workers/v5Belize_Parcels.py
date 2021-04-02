@@ -118,7 +118,7 @@ def main(config_loc=''):
             particle.delete()
 
 
-        pset.execute(kernels, runtime=delta(hours=118), dt=delta(hours=0.1),  output_file= pfile, recovery={ErrorCode.ErrorOutOfBounds: DeleteParticle})
+        pset.execute(kernels, runtime=delta(hours=config['forecast_hours']-2), dt=delta(hours=0.1),  output_file= pfile, recovery={ErrorCode.ErrorOutOfBounds: DeleteParticle})
 
         pfile.close()
 
