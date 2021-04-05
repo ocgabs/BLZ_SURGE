@@ -76,10 +76,10 @@ The repository needs to be renamed due to filename parsing requirements, until t
 $ mv BLZ_SURGE BLZ-SURGE
 ```
 Navigate to the BLZ-SURGE main directory and build the python environment using conda (select yes if asked to confirm):
-
+```shell
 $ conda env create -f environment.yml
 $ conda activate BLZ-SURGE
-
+````
 Install the process manager PM2:
 
 ```shell
@@ -92,10 +92,10 @@ Before first use
 
 Once the python environment and process manager are installed the framework is ready to go, however the system requires some initial setup steps to reflect the new install location, these are:
 
--Populate INPUTS folder
--Amend configuration files
--Generate weighting files
--set processor options
+- Populate INPUTS folder
+- Amend configuration files
+- Generate weighting files
+- set processor options
 
 Populating INPUTS folder
 -------------------------
@@ -104,7 +104,7 @@ The NEMO model requires a number of input files for it to successfully run. It i
 
 - bathy_meter.nc
 - coordinates.nc
--coordinates.bdy.nc
+- coordinates.bdy.nc
 - domain_cfg.nc
 - tidal forcing files.
 
@@ -198,7 +198,8 @@ For the last 50 lines of the PM2 logs.
 
 It is also sensible to install a log rotate module for PM2 that ensures log files don’t get excessively large. This can be installed as follows:
 ```shell
-$ pm2 install pm2-log-rotate
+$ pm2 install pm2-logrotate
+$ pm2 reloadLogs
 ```
 Periodically the PM2 logs will need to be flushed, this process removes all the old logs reclaiming disk space. At the moment there is no automatic method to this. To flush the logs:
 ```shell
