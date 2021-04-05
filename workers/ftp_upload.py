@@ -24,13 +24,13 @@ def main(config_loc=''):
 
         config = read_yaml(args.config_location)
     else:
-        config = read_yaml(config_loc)
+        config = read_yaml(config_loc,'FTP_UPLOAD')
     if args.force == False:
-        code1,timestamp1 = exit_code(config,'run_parcels','0')
+        code1,timestamp1 = exit_code(config,'plot_tracks','0')
         if code1 != '0':
             print('unable to find a successful run of previous worker, terminating now')
             sys.exit(1)
-        code2,timestamp2 = exit_code(config,'plot_tracks','0')
+        code2,timestamp2 = exit_code(config,'ftp_upload','0')
         if code2 == -1:
             print('no log for previous run found, assume first start')
             args.force = True
@@ -41,22 +41,24 @@ def main(config_loc=''):
             args.force = True
 
     if args.force == True:
+        cred = read_yaml(config['cred_file'],'FTP_CRED')
+        list_of_files = glob(config['folder_loc']+'.png')# files to send
+        print('files found in output folder......')
+        print(list_of_files)
+
         print('starting FTP session...')
         try:
-            session = ftplib.FTP(config['server_address']+config['server_path'], 'USERNAME', 'PASSWORD')
+            session = ftplib.FTP(cred['server_address']+cred['server_path'], cred['server_username'], cred['server_password'])
         except:
             print(session)
             print('FTP session failed....')
             sys.exit()
 
-        list_of_files = glob(config['folder_loc']+'.png')# files to send
-        print('files found in output folder......')
-        print(list_of_files)
         for file in list_of_files:
-            if file not in session.nlst():
+            filename = file.split('/')
+            filename = filename[-1]
+            if filename not in session.nlst():
                 with open(file,'rb') as f:
-                    filename = file.split('/')
-                    filename = filename[-1]
                     print('file ' + filename +' doesnt exist on ftp server, uploading now....')
                     try:
                         session.storbinary('STOR '+filename, f) # send the file
@@ -64,7 +66,8 @@ def main(config_loc=''):
                     except:
                         print('upload of '+filename+' unsuccessful')
             else:
-                print('file already exists on server')
+                print('file '+filename+' already exists on server')
+        print('uploads complete, closing session now')
         session.quit()
         print('worker ran successfully exiting')
         sys.exit(0)
@@ -72,14 +75,14 @@ def main(config_loc=''):
         sys.exit(2)
 
 '''Read in config file with all parameters required'''
-def read_yaml(YAML_loc):
+def read_yaml(YAML_loc,section):
     # safe load YAML file, if file is not present raise exception
     if not os.path.isfile(YAML_loc):
         print('DONT PANIC: The yaml file specified does not exist')
         return 1
     with open(YAML_loc) as f:
         config_file = yaml.safe_load(f)
-    config = config_file['FTP_COPY']
+    config = config_file[section]
     return config
 
 def eco_poll(YAML_loc,worker_name):

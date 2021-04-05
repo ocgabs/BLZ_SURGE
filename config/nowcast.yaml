@@ -276,9 +276,8 @@ PLOT_TRACKS:
         set_extent_E: 0 #how much to increase extent over model domain by in degrees East
         set_extent_W: -1 #how much to increase extent over model domain by in degrees West
 
-FTP_COPY:
-        server_address: 
-        server_path: /thopripub/sargassum_forecast
+FTP_UPLOAD:
+        cred_file: /home/thopri/BLZ-SURGE/cred/cred.yml
         folder_loc: /home/thopri/BLZ-SURGE/OUTPUTS/plots/
 
 #Clean up worker configuration
