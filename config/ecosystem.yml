@@ -74,13 +74,13 @@ apps:
     restart_delay   : 600000
     log_date_format : 'YYYY-MM-DD HH:mm:ss.SSS'
 
-  - script          : ./workers/ftp_upload.py
-    name            : 'ftp_upload'
-    cwd             : '/home/thopri/BLZ-SURGE'
-    args            : '-- config/nowcast.yaml'
-    watch           : false
-    restart_delay   : 600000
-    log_date_format : 'YYYY-MM-DD HH:mm:ss.SSS'
+#  - script          : ./workers/ftp_upload.py
+#    name            : 'ftp_upload'
+#    cwd             : '/home/thopri/BLZ-SURGE'
+#    args            : '-- config/nowcast.yaml'
+#    watch           : false
+#    restart_delay   : 600000
+#    log_date_format : 'YYYY-MM-DD HH:mm:ss.SSS'
 
   - script: ./workers/clean_up.py
     name: 'clean_up'
