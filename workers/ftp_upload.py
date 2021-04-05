@@ -42,32 +42,45 @@ def main(config_loc=''):
 
     if args.force == True:
         cred = read_yaml(config['cred_file'],'FTP_CRED')
-        list_of_files = glob(config['folder_loc']+'.png')# files to send
-        print('files found in output folder......')
-        print(list_of_files)
-
         print('starting FTP session...')
         try:
-            session = ftplib.FTP(cred['server_address']+cred['server_path'], cred['server_username'], cred['server_password'])
+            session = ftplib.FTP(cred['server_address'] + cred['server_path'], cred['server_username'],
+                                 cred['server_password'])
+            print('session start successful')
         except:
             print(session)
             print('FTP session failed....')
             sys.exit()
-
-        for file in list_of_files:
-            filename = file.split('/')
-            filename = filename[-1]
-            if filename not in session.nlst():
-                with open(file,'rb') as f:
-                    print('file ' + filename +' doesnt exist on ftp server, uploading now....')
-                    try:
-                        session.storbinary('STOR '+filename, f) # send the file
-                        print('upload successful')
-                    except:
-                        print('upload of '+filename+' unsuccessful')
-            else:
-                print('file '+filename+' already exists on server')
-        print('uploads complete, closing session now')
+        list_of_folders = config['folders'].split(',')
+        print('folders to upload from....')
+        print(list_of_folders)
+        for folder in list_of_folders:
+            print('uploading from '+folder)
+            list_of_files = glob(config['folder_ouput_loc']+folder)# files to send
+            print('files found in folder '+folder+'......')
+            print(list_of_files)
+            print('changing to relevant folder on server....')
+            try:
+                session.cwd(cred['server_path']+folder)
+            except:
+                print(session)
+                print('failed to change directory, exiting.....')
+                sys.exit()
+            for file in list_of_files:
+                filename = file.split('/')
+                filename = filename[-1]
+                if filename not in session.nlst():
+                    with open(file,'rb') as f:
+                        print('file ' + filename +' doesnt exist on ftp server, uploading now....')
+                        try:
+                            session.storbinary('STOR '+filename, f) # send the file
+                            print('upload successful')
+                        except:
+                            print('upload of '+filename+' unsuccessful')
+                else:
+                    print('file '+filename+' already exists on server')
+                print('all new files for folder '+folder+' uploaded')
+        print('uploads from all folders complete, closing session now')
         session.quit()
         print('worker ran successfully exiting')
         sys.exit(0)
