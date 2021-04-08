@@ -139,7 +139,7 @@ def HTTP_req(config, arg, model_run, t, i,redirect=False):
     except requests.exceptions.ConnectionError:
         print('connection error retrying after 10 seconds')
         sleep(10)
-        response = requests.head(URL)
+        response = requests.get(URL)
     if response.status_code != 200:
         return response.status_code
     #print(response.status_code)

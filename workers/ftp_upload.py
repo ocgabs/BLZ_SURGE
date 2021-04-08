@@ -50,7 +50,7 @@ def main(config_loc=''):
         except:
             print(session)
             print('FTP session failed....')
-            sys.exit()
+            sys.exit('FTP session failure')
         list_of_folders = config['folders'].split(',')
         print('folders to upload from....')
         print(list_of_folders)
@@ -65,7 +65,7 @@ def main(config_loc=''):
             except:
                 print(session)
                 print('failed to change directory, exiting.....')
-                sys.exit()
+                sys.exit('FTP change directory failure')
             for file in list_of_files:
                 filename = file.split('/')
                 filename = filename[-1]
@@ -92,7 +92,7 @@ def read_yaml(YAML_loc,section):
     # safe load YAML file, if file is not present raise exception
     if not os.path.isfile(YAML_loc):
         print('DONT PANIC: The yaml file specified does not exist')
-        return 1
+        sys.exit('unable to read yaml file')
     with open(YAML_loc) as f:
         config_file = yaml.safe_load(f)
     config = config_file[section]
