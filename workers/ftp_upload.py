@@ -22,9 +22,13 @@ def main(config_loc=''):
         parser.add_argument('-f', '--force', action='store_true', help='force start of worker')
         args = parser.parse_args()
 
-        config = read_yaml(args.config_location)
+        config = read_yaml(args.config_location,'FTP_UPLOAD')
+        if config == 1:
+            print('unable to read the nowcast yaml file')
     else:
         config = read_yaml(config_loc,'FTP_UPLOAD')
+        if config == 1:
+            print('unable to read the nowcast yaml file')
     if args.force == False:
         code1,timestamp1 = exit_code(config,'plot_tracks','0')
         if code1 != '0':
@@ -42,6 +46,8 @@ def main(config_loc=''):
 
     if args.force == True:
         cred = read_yaml(config['cred_file'],'FTP_CRED')
+        if cred == 1:
+            print('unable to read the FTP credentials yaml file')
         print('starting FTP session...')
         try:
             session = ftplib.FTP(cred['server_address'] + cred['server_path'], cred['server_username'],
@@ -92,7 +98,7 @@ def read_yaml(YAML_loc,section):
     # safe load YAML file, if file is not present raise exception
     if not os.path.isfile(YAML_loc):
         print('DONT PANIC: The yaml file specified does not exist')
-        sys.exit('unable to read yaml file')
+        return 1
     with open(YAML_loc) as f:
         config_file = yaml.safe_load(f)
     config = config_file[section]
