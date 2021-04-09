@@ -276,10 +276,10 @@ PLOT_TRACKS:
         set_extent_E: 0 #how much to increase extent over model domain by in degrees East
         set_extent_W: -1 #how much to increase extent over model domain by in degrees West
 
-FTP_UPLOAD:
-        cred_file: /home/thopri/BLZ-SURGE/cred/cred.yml
-        folder_ouput_loc: /home/thopri/BLZ-SURGE/OUTPUTS/
-        folders: plots,csv,tracks
+#FTP_UPLOAD:
+#        cred_file: /home/thopri/BLZ-SURGE/cred/cred.yml
+#        folder_ouput_loc: /home/thopri/BLZ-SURGE/OUTPUTS/
+#        folders: plots,csv,tracks
 
 #Clean up worker configuration
 clean:
