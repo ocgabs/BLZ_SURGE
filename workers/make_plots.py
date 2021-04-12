@@ -154,7 +154,7 @@ def eco_poll(YAML_loc,worker_name):
 
 def exit_code(config,worker,code_find=None):
     if code_find != None:
-        with open(config['pm2log'], 'r') as f:
+        with open(config['make']['plots']['pm2log'], 'r') as f:
             lines = f.read().splitlines()
         for line in range(len(lines),0,-1):
             last_line = lines[line-1]
