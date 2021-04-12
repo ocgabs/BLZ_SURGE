@@ -262,7 +262,7 @@ RUN_PARCELS:
         out_dir: '/home/thopri/BLZ-SURGE/OUTPUTS/tracks/'
         status_dir: '/home/thopri/BLZ-SURGE/config/'
         pm2log: /home/thopri/.pm2/pm2.log
-        forecast_hours: 72
+        forecast_hours: 120
 
 PLOT_TRACKS:
         pm2log: /home/thopri/.pm2/pm2.log
