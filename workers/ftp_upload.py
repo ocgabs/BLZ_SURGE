@@ -11,8 +11,8 @@ from argparse import ArgumentParser
 import yaml
 import sys
 import datetime
-import ftplib
 from glob import glob
+import paramiko
 
 def main(config_loc=''):
 
@@ -48,46 +48,53 @@ def main(config_loc=''):
         cred = read_yaml(config['cred_file'],'FTP_CRED')
         if cred == 1:
             print('unable to read the FTP credentials yaml file')
-        print('starting FTP session...')
+        print('opening SFTP connection...')
         try:
-            session = ftplib.FTP(cred['server_address'] + cred['server_path'], cred['server_username'],
-                                 cred['server_password'])
-            print('session start successful')
+            ssh = paramiko.SSHClient()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh.connect(cred['server_address'], username=cred['server_username'], password=cred['server_password'])
+            sftp = ssh.open_sftp()
+            print('opening of STFP connection successful')
         except:
-            print(session)
-            print('FTP session failed....')
-            sys.exit('FTP session failure')
+            print('SFTP connection failed....')
+            sys.exit('SFTP connection failure')
+
         list_of_folders = config['folders'].split(',')
         print('folders to upload from....')
         print(list_of_folders)
+
         for folder in list_of_folders:
-            print('uploading from '+folder)
-            list_of_files = glob(config['folder_ouput_loc']+folder)# files to send
-            print('files found in folder '+folder+'......')
+            f_name = folder.split('-')
+            f_name = f_name[0]
+            f_type = folder.split('-')
+            f_type = f_type[1]
+            print('uploading from '+f_name)
+            list_of_files = glob(config['folder_ouput_loc']+f_name+'/*.'+f_type)# files to send
+            if len(list_of_files) == 0:
+                print('no files to upload going to next folder...')
+                continue
+            print('files found in folder '+f_name+'......')
             print(list_of_files)
-            print('changing to relevant folder on server....')
-            try:
-                session.cwd(cred['server_path']+folder)
-            except:
-                print(session)
-                print('failed to change directory, exiting.....')
-                sys.exit('FTP change directory failure')
+            file_chk = 0
             for file in list_of_files:
                 filename = file.split('/')
                 filename = filename[-1]
-                if filename not in session.nlst():
-                    with open(file,'rb') as f:
-                        print('file ' + filename +' doesnt exist on ftp server, uploading now....')
-                        try:
-                            session.storbinary('STOR '+filename, f) # send the file
-                            print('upload successful')
-                        except:
-                            print('upload of '+filename+' unsuccessful')
-                else:
-                    print('file '+filename+' already exists on server')
-                print('all new files for folder '+folder+' uploaded')
-        print('uploads from all folders complete, closing session now')
-        session.quit()
+                f_name = folder.split('-')
+                f_name = f_name[0]
+                remotepath = cred['server_path']+f_name+'/'+filename
+                try:
+                    sftp.put(file, remotepath)
+                except:
+                    file_chk = file_chk +1
+                    print('upload of '+filename+' unsuccessful')
+                    print('trying next file in list')
+            if file_chk == 0:
+                print('all files for folder '+f_name+' uploaded')
+            else:
+                print(str(file_chk)+' files did not successfully upload')
+        print('uploads from all folders complete, closing connection now')
+        sftp.close()
+        ssh.close()
         print('worker ran successfully exiting')
         sys.exit(0)
     else:
