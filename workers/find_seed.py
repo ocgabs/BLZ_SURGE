@@ -196,7 +196,8 @@ def exit_code(config,worker,code_find=None):
                 timestamp = last_line[0]
                 timestamp = timestamp[:-1]
                 code = code[1]
-                return
+                return code, timestamp
+    return -1,-1
 
 def timestamp_check(timestamp1,timestamp2):
     dt_timestamp1 = datetime.datetime.strptime(timestamp1,"%Y-%m-%dT%H:%M:%S")
