@@ -201,6 +201,7 @@ def UtcMinus24():
 # at midnight, 6 am, noon and 6 pm. Currently only a daily midnight run is downloaded, 
 # as the model is currently unable to run with restart lengths of less than a day.
 def Model_run():
+    hour = '00'	
     now = datetime.datetime.utcnow()
     now = now.timetuple()
     #print(now[3])
@@ -218,6 +219,7 @@ def Model_run():
     return hour
 #Funciton to calcule the model hour 6 hours previous to current HourNow
 def ModelMinus24():
+    hour = '00'
     now = datetime.datetime.utcnow()
     minus = now - datetime.timedelta(hours=24)
     minus = minus.timetuple()

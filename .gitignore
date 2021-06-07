@@ -33,3 +33,7 @@ Surge_Part_Manual.bak
 *.bin
 !config/station_list.txt
 cred/cred.yml
+*.sif
+*.F90
+*.json
+*.tif

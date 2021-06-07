@@ -398,7 +398,8 @@ def start_nemo(config):
     if config['container'] == 'docker':
         os.system('docker run --rm -v '+config['container_mount']+':/'+config['container_dir']+' '
                   +config['container_name']+' &> '+config['container_log']+'containerlog-'+start_ymd+'.txt &')
-
+    if config['container'] == 'singularity':
+	    os.system('singularity run --bind '+config['container_mount']+':/'+config['container_dir']+' --pwd /'+config['container_dir'] +'/RUN_NEMO '+config['container_name']+' &> '+config['container_log']+'containerlog-'+start_ymd+'.txt &')
 if __name__ == '__main__':
     main()  # pragma: no cover
 

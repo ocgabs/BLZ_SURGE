@@ -4,7 +4,7 @@ apps:
 
   - script          : ./workers/download_weather.py
     name            : 'download_weather'
-    cwd             : '/home/thopri/BLZ-SURGE'
+    cwd             : '/work/thopri/BLZ-SURGE'
     args            : '-- config/nowcast.yaml'
     watch           : false
     autorestart     : false
@@ -12,7 +12,7 @@ apps:
 
   - script          : ./workers/process_forcing.py
     name            : 'process_forcing'
-    cwd             : '/home/thopri/BLZ-SURGE'
+    cwd             : '/work/thopri/BLZ-SURGE'
     args            : '-- config/nowcast.yaml'
     watch           : false
     restart_delay   : 600000
@@ -20,7 +20,7 @@ apps:
 
   - script          : ./workers/run_nemo.py
     name            : 'run_nemo'
-    cwd             : '/home/thopri/BLZ-SURGE'
+    cwd             : '/work/thopri/BLZ-SURGE'
     args            : '-- config/nowcast.yaml'
     watch           : false
     restart_delay   : 600000
@@ -28,7 +28,7 @@ apps:
 
   - script          : ./workers/watch_nemo.py
     name            : 'watch_nemo'
-    cwd             : '/home/thopri/BLZ-SURGE'
+    cwd             : '/work/thopri/BLZ-SURGE'
     args            : '-- config/nowcast.yaml'
     watch           : false
     restart_delay   : 600000
@@ -36,7 +36,7 @@ apps:
 
   - script          : ./workers/get_sargassium.py
     name            : 'get_sargassium'
-    cwd             : '/home/thopri/BLZ-SURGE'
+    cwd             : '/work/thopri/BLZ-SURGE'
     args            : '-- config/nowcast.yaml'
     watch           : false
     autorestart     : false
@@ -44,7 +44,7 @@ apps:
 
   - script          : ./workers/find_seed.py
     name            : 'find_seed'
-    cwd             : '/home/thopri/BLZ-SURGE'
+    cwd             : '/work/thopri/BLZ-SURGE'
     args            : '-- config/nowcast.yaml'
     watch           : false
     restart_delay   : 600000
@@ -52,7 +52,7 @@ apps:
 
   - script          : ./workers/v5Belize_Parcels.py
     name            : 'run_parcels'
-    cwd             : '/home/thopri/BLZ-SURGE'
+    cwd             : '/work/thopri/BLZ-SURGE'
     args            : '-- config/nowcast.yaml'
     watch           : false
     restart_delay   : 600000
@@ -60,7 +60,7 @@ apps:
 
   - script          : ./workers/PlotParcelsOutput.py
     name            : 'plot_tracks'
-    cwd             : '/home/thopri/BLZ-SURGE'
+    cwd             : '/work/thopri/BLZ-SURGE'
     args            : '-- config/nowcast.yaml'
     watch           : false
     restart_delay   : 600000
@@ -68,25 +68,32 @@ apps:
 
   - script          : ./workers/make_plots.py
     name            : 'make_plots'
-    cwd             : '/home/thopri/BLZ-SURGE'
+    cwd             : '/work/thopri/BLZ-SURGE'
     args            : '-- config/nowcast.yaml'
     watch           : false
     restart_delay   : 600000
     log_date_format : 'YYYY-MM-DD HH:mm:ss.SSS'
 
-#  - script          : ./workers/ftp_upload.py
-#    name            : 'ftp_upload'
-#    cwd             : '/home/thopri/BLZ-SURGE'
-#    args            : '-- config/nowcast.yaml'
-#    watch           : false
-#    restart_delay   : 600000
-#    log_date_format : 'YYYY-MM-DD HH:mm:ss.SSS'
-
-  - script: ./workers/clean_up.py
-    name: 'clean_up'
-    cwd: '/home/thopri/BLZ-SURGE'
+  - script          : ./workers/ftp_upload.py
+    name            : 'ftp_upload'
+    cwd             : '/work/thopri/BLZ-SURGE'
     args            : '-- config/nowcast.yaml'
-    watch: false
-    restart_delay: 86400000
-    log_date_format: 'YYYY-MM-DD HH:mm:ss.SSS'
+    watch           : false
+    restart_delay   : 600000
+    log_date_format : 'YYYY-MM-DD HH:mm:ss.SSS'
 
+  - script          : ./workers/scheduler.py
+    name            : 'scheduler'
+    cwd             : '/work/thopri/BLZ-SURGE'
+    args            : '-- config/nowcast.yaml'
+    watch           : false
+    log_date_format : 'YYYY-MM-DD HH:mm:ss.SSS'
+
+
+  - script          : ./workers/clean_up.py
+    name            : 'clean_up'
+    cwd             : '/work/thopri/BLZ-SURGE'
+    args            : '-- config/nowcast.yaml'
+    watch           : false
+    restart_delay   : 86400000
+    log_date_format : 'YYYY-MM-DD HH:mm:ss.SSS'

@@ -17,11 +17,16 @@ def main(config_loc=''):
     schedule.every().day.at(config['start_time_sar']).do(run_sar)
 
     while True:
+	print('running any pending jobs...')
         schedule.run_pending()
-
+	print('going to sleep for 60 seconds')
+        sleep(60)
+	
 def run_weather():
+    print('starting weather worker.....')	
     os.system('pm2 start download_weather')
 def run_sar():
+    print('starting get sar worker......')
     os.system('pm2 start get_sargassium')
 
 '''Read in config file with all parameters required'''

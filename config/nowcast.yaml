@@ -30,6 +30,11 @@
 #      container: podman
 #
 
+# Scheduler Configuration
+SCHEDULER:
+        start_time_weather : 01:00
+        start_time_sar     : 01:00
+
 #Download Weather worker configuration
 weather:
   download:
@@ -59,8 +64,8 @@ weather:
     # Number of hours requested in the forecast Goes upt 120 (I think)
         forecast_hrs: 120
     # Destination directory for downloaded GFS model GRIB data files
-        dest_dir: '/home/thopri/BLZ-SURGE/grib/'
-        status_dir: /home/thopri/BLZ-SURGE/config/
+        dest_dir: '/work/thopri/BLZ-SURGE/grib/'
+        status_dir: /work/thopri/BLZ-SURGE/config/
 
 #Forcing process worker configuration
 forcing:
@@ -86,13 +91,13 @@ forcing:
     #Template of GRIB file names
         file_template: 'gfs.t{model_run}z.pgrb2.0p25.f'
     #Destination directory of NetCDF files
-        netcdf_dest_dir: '/home/thopri/BLZ-SURGE/netcdf/GFS/'
+        netcdf_dest_dir: '/work/thopri/BLZ-SURGE/netcdf/GFS/'
     #Grib downloaded files location
-        grib_dir: '/home/thopri/BLZ-SURGE/grib/'
+        grib_dir: '/work/thopri/BLZ-SURGE/grib/'
     #Config name NOTE: do NOT use _ in the name as it will break parsing of file names
         netcdf_name: BLZ-SURGE
-        config_dir: /home/thopri/BLZ-SURGE/config/
-        pm2log: /home/thopri/.pm2/pm2.log
+        config_dir: /work/thopri/BLZ-SURGE/config/
+        pm2log: /login/thopri/.pm2/pm2.log
 
 #Generate Boundary worker configuration
 generate:
@@ -119,15 +124,15 @@ RUN_NEMO:
         duration: 120  # hours
   # Directory where files (e.g. namelist.time) and symlinks
   # (e,g. iodef.xml) necessary to prepare the NEMO runs are stored
-        config_dir: /home/thopri/BLZ-SURGE/RUN_NEMO/
+        config_dir: /work/thopri/BLZ-SURGE/RUN_NEMO/
   #weighting file location
-        weights_dir: /home/thopri/BLZ-SURGE/weights/
+        weights_dir: /work/thopri/BLZ-SURGE/weights/
   #netcdf file location
-        netcdf_dir: /home/thopri/BLZ-SURGE/netcdf/GFS/
+        netcdf_dir: /work/thopri/BLZ-SURGE/netcdf/GFS/
   #location of boundary data for model
-        boundary_dest: /home/thopri/BLZ-SURGE/RUN_NEMO/fluxes/
+        boundary_dest: /work/thopri/BLZ-SURGE/RUN_NEMO/fluxes/
   #location of restart files
-        restart_dir: /home/thopri/BLZ-SURGE/RUN_NEMO/Restart_files/
+        restart_dir: /work/thopri/BLZ-SURGE/RUN_NEMO/Restart_files/
   #name of namelist template file
         namelist_template: 2_namelist_cfg_template
   #name of populated namelist file for model
@@ -149,23 +154,23 @@ RUN_NEMO:
   # directory composed from the "NEMO code" and "config name" keys above.
         coordinates: coordinates.nc
 ## Directory where run results are stored
-        results archive: /home/thopri/BLZ-SURGE/RUN_NEMO/
+        results archive: /work/thopri/BLZ-SURGE/RUN_NEMO/
   # Which container framework to use
-        container: docker
-        container_name: thopri/nemo-surge-blz:8814
-        container_mount: /home/thopri/BLZ-SURGE/
+        container: singularity
+        container_name: nemo-surge-blz_8814.sif
+        container_mount: /work/thopri/BLZ-SURGE/
         container_dir: BLZ-SURGE
   # Time to start model, starting at midnight fails due to no previous day data
         hour_start: '01' # 1 am
   # where to save container terminal output in log file
-        container_log: /home/thopri/BLZ-SURGE/logs/
-        status_dir: /home/thopri/BLZ-SURGE/config/
-        pm2log: /home/thopri/.pm2/pm2.log
+        container_log: /work/thopri/BLZ-SURGE/logs/
+        status_dir: /work/thopri/BLZ-SURGE/config/
+        pm2log: /login/thopri/.pm2/pm2.log
 
 #Watch NEMO worker configuration
 WATCH_NEMO:
     #location of model results directory
-        results_dir: /home/thopri/BLZ-SURGE/RUN_NEMO/
+        results_dir: /work/thopri/BLZ-SURGE/RUN_NEMO/
     #duration of model run
         duration: 120 #Hours
     #time step of model
@@ -174,27 +179,27 @@ WATCH_NEMO:
         config_name: BLZ-SURGE
     # name of container to watch
         container_name: thopri/nemo-surge-blz:8814
-        status_dir: /home/thopri/BLZ-SURGE/config/
+        status_dir: /work/thopri/BLZ-SURGE/config/
         WATCH_INTERVAL: 1 # minutes
-        pm2log: /home/thopri/.pm2/pm2.log
-        output_dir: /home/thopri/BLZ-SURGE/OUTPUTS/netcdf
+        pm2log: /login/thopri/.pm2/pm2.log
+        output_dir: /work/thopri/BLZ-SURGE/OUTPUTS/netcdf
         file_parse:  'BLZ-SURGE_1h_*.nc'
 
 #Make Plots NEMO worker configuration
 make:
   plots:
     #location of station list file
-        station_dir: /home/thopri/BLZ-SURGE/config/
+        station_dir: /work/thopri/BLZ-SURGE/config/
     #location to save processed image plots both spatial and timeseries
-        plots_dir: /home/thopri/BLZ-SURGE/OUTPUTS/plots/
+        plots_dir: /work/thopri/BLZ-SURGE/OUTPUTS/plots/
     #location to save images to make gif animation
-        animation_plots_dir: /home/thopri/BLZ-SURGE/OUTPUTS/plots/animation_plots/
+        animation_plots_dir: /work/thopri/BLZ-SURGE/OUTPUTS/plots/animation_plots/
     #location of output NETCDF directory
-        netcdf_dir: /home/thopri/BLZ-SURGE/OUTPUTS/netcdf/
+        netcdf_dir: /work/thopri/BLZ-SURGE/OUTPUTS/netcdf/
     #location of model outputs
-        model_output_dir: /home/thopri/BLZ-SURGE/OUTPUTS/netcdf/
+        model_output_dir: /work/thopri/BLZ-SURGE/OUTPUTS/netcdf/
     #location to save CSV output
-        csv_dir: /home/thopri/BLZ-SURGE/OUTPUTS/csv/
+        csv_dir: /work/thopri/BLZ-SURGE/OUTPUTS/csv/
     #model time step    
         time_step: 1 #In seconds (6 mins)
     #total time of model run (hours)
@@ -207,7 +212,7 @@ make:
         station_list: station_list.txt
     #name of NEMO model configuration
         config_name: BLZ-SURGE
-        pm2log: /home/thopri/.pm2/pm2.log
+        pm2log: /login/thopri/.pm2/pm2.log
 
 #Seeding Open Parcels worker configuration
 GET_SAR:
@@ -226,74 +231,75 @@ GET_SAR:
         min: 0
         max: 252
     # bathy meter location
-        bathy_meter: '/home/thopri/BLZ-SURGE/INPUTS/BLZE12_bathy_meter.nc'
-        coordinates: '/home/thopri/BLZ-SURGE/INPUTS/BLZE12_coordinates.nc'
+        bathy_meter: '/work/thopri/BLZ-SURGE/INPUTS/BLZE12_bathy_meter.nc'
+        coordinates: '/work/thopri/BLZ-SURGE/INPUTS/BLZE12_coordinates.nc'
     # directory to store downloaded product
-        dest_dir: '/home/thopri/BLZ-SURGE/sargassium/'
+        dest_dir: '/work/thopri/BLZ-SURGE/sargassium/'
     # name of GeoTiff image (processed from downloaded image)
         tiff_name: 'SargassoT7.tif'
     # string to parse correct image, i.e. unique part of filename
         parse_ID: 'DENSITY.png'
-        status_dir: /home/thopri/BLZ-SURGE/config/
+        status_dir: /login/thopri/BLZ-SURGE/config/
 
 FIND_SEEDS:
       # name of GeoTiff image (processed from downloaded image)
       tiff_name: 'SargassoT7.tif'
       # directory to store downloaded product
-      dest_dir: '/home/thopri/BLZ-SURGE/sargassium/'
+      dest_dir: '/work/thopri/BLZ-SURGE/sargassium/'
       # Produce plots? For QA and setup purposes.
       plot: False
-      bathy_meter: '/home/thopri/BLZ-SURGE/INPUTS/BLZE12_bathy_meter.nc'
+      bathy_meter: '/work/thopri/BLZ-SURGE/INPUTS/BLZE12_bathy_meter.nc'
       file_parse:  'C*DENSITY.png'
-      pm2log: /home/thopri/.pm2/pm2.log
-      status_dir: /home/thopri/BLZ-SURGE/config/
+      pm2log: /login/thopri/.pm2/pm2.log
+      status_dir: /work/thopri/BLZ-SURGE/config/
       sband_max: 252
       sband_min: 0
 
 RUN_PARCELS:
-        lon_csv: '/home/thopri/BLZ-SURGE/sargassium/ilon.csv'
-        lat_csv: '/home/thopri/BLZ-SURGE/sargassium/ilat.csv'
-        data_path: '/home/thopri/BLZ-SURGE/OUTPUTS/netcdf/'
+        lon_csv: '/work/thopri/BLZ-SURGE/sargassium/ilon.csv'
+        lat_csv: '/work/thopri/BLZ-SURGE/sargassium/ilat.csv'
+        data_path: '/work/thopri/BLZ-SURGE/OUTPUTS/netcdf/'
         ufile_parse: 'BLZ-SURGE_1h_*U.nc'
         vfile_parse: 'BLZ-SURGE_1h_*V.nc'
         file_parse:  'BLZ-SURGE_1h_*.nc'
-        grid_file: '/home/thopri/BLZ-SURGE/INPUTS/BLZE12_coordinates.nc'
+        grid_file: '/work/thopri/BLZ-SURGE/INPUTS/BLZE12_coordinates.nc'
         out_file: 'nBelize_nemo_sargaso_particlesT2'
-        out_dir: '/home/thopri/BLZ-SURGE/OUTPUTS/tracks/'
-        status_dir: '/home/thopri/BLZ-SURGE/config/'
-        pm2log: /home/thopri/.pm2/pm2.log
+        out_dir: '/work/thopri/BLZ-SURGE/OUTPUTS/tracks/'
+        status_dir: '/work/thopri/BLZ-SURGE/config/'
+        pm2log: /login/thopri/.pm2/pm2.log
         forecast_hours: 120
 
 PLOT_TRACKS:
-        pm2log: /home/thopri/.pm2/pm2.log
-        out_dir: '/home/thopri/BLZ-SURGE/OUTPUTS/plots/'
+        pm2log: /login/thopri/.pm2/pm2.log
+        out_dir: '/work/thopri/BLZ-SURGE/OUTPUTS/plots/'
         plot_name_template:
         input_file_template: 'nBelize_nemo_sargaso_particlesT2.nc'
-        input_dir: '/home/thopri/BLZ-SURGE/OUTPUTS/tracks/'
+        input_dir: '/work/thopri/BLZ-SURGE/OUTPUTS/tracks/'
         num_particles: 500
         set_extent_N: 0  #how much to increase extent over model domain by in degrees North
         set_extent_S: -1 #how much to increase extent over model domain by in degrees South
         set_extent_E: 0 #how much to increase extent over model domain by in degrees East
         set_extent_W: -1 #how much to increase extent over model domain by in degrees West
 
-#FTP_UPLOAD:
-#        cred_file: /home/thopri/BLZ-SURGE/cred/cred.yml
-#        folder_ouput_loc: /home/thopri/BLZ-SURGE/OUTPUTS/
-#        folders: plots,csv,tracks
+FTP_UPLOAD:
+        cred_file: /work/thopri/BLZ-SURGE/cred/cred.yml
+        folder_ouput_loc: /work/thopri/BLZ-SURGE/OUTPUTS/
+        folders: plots-png,csv-csv,tracks-nc
+        pm2log: /login/thopri/.pm2/pm2.log
 
 #Clean up worker configuration
 clean:
       up:
     #location of model run directory
-        run_dir: /home/thopri/BLZ-SURGE/RUN_NEMO/
+        run_dir: /work/thopri/BLZ-SURGE/RUN_NEMO/
     #location of log files
-        forcing_dir: /home/thopri/BLZ-SURGE/netcdf/
+        forcing_dir: /work/thopri/BLZ-SURGE/netcdf/
     #location of output files
-        out_dir: /home/thopri/BLZ-SURGE/OUTPUTS/
+        out_dir: /work/thopri/BLZ-SURGE/OUTPUTS/
     #name of model configuration
         config_name: BLZ-SURGE
     #location of restart files
-        restart_dir: /home/thopri/BLZ-SURGE/RUN_NEMO/Restart_files/
+        restart_dir: /work/thopri/BLZ-SURGE/RUN_NEMO/Restart_files/
     #Runtime model files to delete after successful run
         del_1: layout.dat
         del_2: namelist_cfg
@@ -309,9 +315,9 @@ clean:
         sub_1: GFS/
         sub_2: MBLZ/
     #sub directories for log files to trim
-        log_dir: /home/thopri/BLZ-SURGE/logs/
+        log_dir: /work/thopri/BLZ-SURGE/logs/
     # Sargassium dir to trim
-        sargassium_dir: /home/thopri/BLZ-SURGE/sargassium/
+        sargassium_dir: /work/thopri/BLZ-SURGE/sargassium/
     #subdirectories for processed model output
         out_1: tracks/
         out_2: netcdf/

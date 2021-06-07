@@ -11,4 +11,4 @@ ln -s -f /BLZ-SURGE/INPUTS/domain_cfg.nc .
 sleep 1
 echo "Running Model Now"
 mpirun -n 3 ./nemo.exe : -n 1 ./xios_server.exe
-#mpirun -n -7 ./nemo.exe
+#mpirun -n -3 ./nemo.exe

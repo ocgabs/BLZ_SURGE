@@ -250,20 +250,22 @@ def _confirm_run_success(config, sim_length):
 
 def chk_container(config):
     cont = True
-    container = Popen(['docker', 'ps'], stdout=PIPE, stderr=PIPE)
+    container = Popen(['pgrep', 'nemo'], stdout=PIPE, stderr=PIPE)
     stdout, stderr = container.communicate()
     stdout = stdout.decode('utf-8')
-    container = stdout.split('\n')
-    container = container[1].split(' ')
-    container = [x for x in container if x]
-    try:
-        container_ID = container[0]
-        container_name = container[1]
-    except IndexError:
-        cont = False
-        return container
-    if container_name != config['container_name']:
-        cont = False
+    if stdout == '':
+    	cont = False
+    #container = stdout.split('\n')
+    #container = container[1].split(' ')
+    #container = [x for x in container if x]
+    #try:
+    #    container_ID = container[0]
+    #    container_name = container[1]
+    #except IndexError:
+    #    cont = False
+    #    return container
+    #if container_name != config['container_name']:
+    #    cont = False
     return cont
 
 if __name__ == '__main__':
